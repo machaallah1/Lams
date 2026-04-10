@@ -1,0 +1,23 @@
+style-app-v2/
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── src/
+│   ├── App.jsx           # Configuration globale (Providers & Router)
+│   ├── index.css         # Import Tailwind et styles globaux (animations, police)
+│   ├── store/            # Gestion d'état global (Zustand)
+│   │   ├── authStore.js  # État de l'utilisateur connecté 
+│   │   └── socialStore.js# État des fausses données (posts, actions like/follow)
+│   ├── layouts/
+│   │   └── MainLayout.jsx# Le socle du Dashboard avec la navigation latérale
+│   ├── components/       # Composants réutilisables
+│   │   ├── Ui/           # Boutons, Modales, Inputs...
+│   │   └── Social/       # FeedSocial, PostCard, CommentModal...
+│   ├── pages/            # Vues complètes
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── VerifyOTP.jsx
+│   │   ├── Dashboard.jsx
+│   │   └── Profile.jsx
+│   └── services/         # Appels API Axios (auth.js)
