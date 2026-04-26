@@ -1,12 +1,53 @@
 import { create } from 'zustand';
 
+// Vérifier si on a un token en mémoire
+const initialToken = localStorage.getItem('style_token') || null;
+
 export const useAuthStore = create((set) => ({
-  user: { 
-    id: "moi", 
-    tag: "@mon_style", 
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" 
-  },
-  isAuthenticated: true, // Fictif pour le prototypage afin d'accéder au dashboard
+  user: null, // Plus d'utilisateur mocké au départ
+  isAuthenticated: !!initialToken,
+  
+  // Fonction locale pour réinitialiser le state
   login: (userData) => set({ user: userData, isAuthenticated: true }),
-  logout: () => set({ user: null, isAuthenticated: false }),
+  
+  logout: () => {
+    localStorage.removeItem('style_token');
+    set({ user: null, isAuthenticated: false });
+  },
+  
+  updateUser: (newData) => set((state) => ({ user: { ...state.user, ...newData } })),
+
+  // Connexion API Réelle
+  loginAPI: async (email, password) => {
+    const res = await fetch('http://localhost:5000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(res.ok) {
+      localStorage.setItem('style_token', data.token);
+      set({ user: data.user, isAuthenticated: true });
+      return true;
+    } else {
+      throw new Error(data.error || "Erreur de connexion");
+    }
+  },
+
+  // Inscription API Réelle
+  registerAPI: async (pseudo, email, password) => {
+    const res = await fetch('http://localhost:5000/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag: pseudo, email, password })
+    });
+    const data = await res.json();
+    if(res.ok) {
+      localStorage.setItem('style_token', data.token);
+      set({ user: data.user, isAuthenticated: true });
+      return true;
+    } else {
+      throw new Error(data.error || "Erreur d'inscription");
+    }
+  }
 }));

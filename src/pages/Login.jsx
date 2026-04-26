@@ -1,22 +1,28 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Lock, Mail } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const login = useAuthStore(state => state.login);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const loginAPI = useAuthStore(state => state.loginAPI);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login({ 
-      id: "moi", 
-      tag: "@mon_style", 
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" 
-    });
-    navigate('/');
+    setIsLoading(true);
+    setError(null);
+    try {
+      await loginAPI(email, password);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -29,6 +35,7 @@ export default function Login() {
         <p className="text-gray-500 mb-8 font-medium">Connectez-vous pour découvrir les tendances</p>
         
         <form onSubmit={handleLogin} className="flex flex-col gap-5">
+          {error && <div className="bg-red-50 text-red-500 font-bold p-3 rounded-xl text-sm border border-red-100">{error}</div>}
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input 
@@ -52,10 +59,13 @@ export default function Login() {
             />
           </div>
           
-          <button type="submit" className="w-full bg-primary text-white font-bold py-3 rounded-2xl mt-2 shadow-[0_10px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] hover:shadow-[0_15px_25px_rgba(168,85,247,0.4)] transition-all">
-            Connexion
+          <button disabled={isLoading} type="submit" className="w-full bg-primary text-white font-bold py-3 rounded-2xl mt-2 shadow-[0_10px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] hover:shadow-[0_15px_25px_rgba(168,85,247,0.4)] transition-all disabled:opacity-50">
+            {isLoading ? 'Connexion en cours...' : 'Connexion'}
           </button>
         </form>
+        <div className="mt-8 text-sm font-medium text-gray-500">
+          Pas encore de compte ? <Link to="/register" className="text-primary font-bold hover:underline">S'inscrire</Link>
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function CreatePost() {
   const [imgUrl, setImgUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
   
@@ -19,35 +20,29 @@ export default function CreatePost() {
     if (file && file.type.startsWith('image/')) {
       const objectUrl = URL.createObjectURL(file);
       setImgUrl(objectUrl);
+      setSelectedFile(file);
     }
   };
 
-  const handlePublish = (e) => {
+  const handlePublish = async (e) => {
     e.preventDefault();
-    if (!imgUrl) return;
+    if (!selectedFile) return;
     
     setLoading(true);
-    // Simulation du temps de traitement par l'Intelligence Artificielle
-    setTimeout(() => {
-      const newPost = {
-        id: `p${Date.now()}`,
-        userId: user.id,
-        tag: user.tag,
-        score: Math.floor(Math.random() * 20 + 80) + "%", // Score IA aléatoire entre 80 et 100%
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        img: imgUrl, // Ici l'Object URL en local. Plus tard, on enverra le fichier à l'API.
-        avatar: user.avatar
-      };
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedFile);
       
-      useSocialStore.setState(state => ({
-        posts: [newPost, ...state.posts]
-      }));
+      await useSocialStore.getState().publishPostAPI(formData);
+      
       setLoading(false);
-      addToast("Style publié et score IA généré !", "success");
+      addToast("Style publié et validé par l'IA !", "success");
       navigate('/profile');
-    }, 1500);
+    } catch(err) {
+      setLoading(false);
+      addToast(err.message, "error");
+    }
   };
 
   return (
@@ -78,7 +73,7 @@ export default function CreatePost() {
               <img src={imgUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
               <button 
                 type="button" 
-                onClick={() => setImgUrl('')}
+                onClick={() => { setImgUrl(''); setSelectedFile(null); }}
                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center text-gray-800 hover:bg-red-500 hover:text-white transition-colors cursor-pointer border-none shadow-md"
                >
                 <X size={20} />

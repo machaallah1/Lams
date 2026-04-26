@@ -5,6 +5,7 @@ import Profile from './pages/Profile';
 import Explore from './pages/Explore';
 import CreatePost from './pages/CreatePost';
 import Messages from './pages/Messages';
+import AiChat from './pages/AiChat';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
@@ -37,6 +38,7 @@ function App() {
           <Route path="explore" element={<Explore />} />
           <Route path="create" element={<CreatePost />} />
           <Route path="messages" element={<Messages />} />
+          <Route path="aichat" element={<AiChat />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<div className="flex w-full h-full justify-center items-center text-xl text-primary/50 font-bold glass rounded-3xl m-10">Interface en construction</div>} />

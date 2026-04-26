@@ -1,26 +1,32 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSocialStore } from '../store/socialStore';
 import { useAuthStore } from '../store/authStore';
-import { Settings, Plus, Check, Heart, MessageCircle, Star, ShieldCheck, TrendingUp, HelpCircle } from 'lucide-react';
+import { Settings, Plus, Check, Heart, MessageCircle, Star, ShieldCheck, TrendingUp, HelpCircle, Shirt, Calendar, Bookmark } from 'lucide-react';
+import BookingModal from '../components/Monetization/BookingModal';
+import { useState } from 'react';
 
 export default function Profile() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { posts, followedUsers, toggleFollow } = useSocialStore();
+  const { posts, followedUsers, savedPosts, toggleFollow } = useSocialStore();
   const currentUser = useAuthStore(auth => auth.user);
   
   const userId = state?.userId || currentUser?.id;
   const userPosts = posts.filter(p => p.userId === userId);
   const isMyProfile = userId === currentUser?.id;
   const isFollowed = followedUsers.includes(userId);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('recent');
+  
+  const savedPostsData = posts.filter(p => savedPosts.includes(p.id));
+  const displayedPosts = activeTab === 'recent' ? userPosts : savedPostsData;
   
   const avgScore = userPosts.length > 0 
     ? Math.round(userPosts.reduce((acc, p) => acc + parseInt(p.score), 0) / userPosts.length) 
     : 0;
 
-  // Simulation des données pour les conditions Mentor
-  const helpfulVotes = 12; // Simulation : nombre de votes utiles reçus
-  const isIdentityVerified = false; // Simulation : statut d'identité vérifiée
+  // En attendant l'implémentation de la vérification par KYC Vote communautaire
+  const isIdentityVerified = currentUser?.kycStatus === 'approved';
 
   const profileInfo = userPosts.length > 0 ? {
     tag: userPosts[0].tag,
@@ -28,18 +34,20 @@ export default function Profile() {
     followers: 1240 + (isFollowed ? 1 : 0),
     following: 345,
     likes: userPosts.reduce((acc, curr) => acc + curr.likes, 0),
-    isMentor: userPosts.length >= 15 && avgScore >= 85 // Condition globale simulée
+    isMentor: userPosts[0].isMentor || false,
+    coachingRate: userPosts[0].coachingRate || 30
   } : {
     tag: currentUser?.tag,
     avatar: currentUser?.avatar,
     followers: 140, 
     following: followedUsers.length,
     likes: 0,
-    isMentor: false
+    isMentor: currentUser?.isMentor || false,
+    coachingRate: currentUser?.coachingRate || 30
   };
 
   return (
-    <div className="w-full h-full p-10 overflow-y-auto animate-in fade-in duration-500">
+    <div className="w-full h-full p-10 overflow-y-auto animate-in fade-in duration-500 relative">
       <div className="max-w-4xl mx-auto">
         
         {/* Header Profile */}
@@ -48,8 +56,8 @@ export default function Profile() {
             <div className="relative">
               <img src={profileInfo.avatar} alt="avatar" className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover" />
               {profileInfo.isMentor && (
-                <div className="absolute -bottom-2 relative left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-black flex items-center justify-center gap-1 shadow-md w-max">
-                  <Star size={12} fill="currentColor" /> Mentor
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] px-3 py-1 rounded-full uppercase tracking-widest font-black flex items-center justify-center gap-1 shadow-md w-max">
+                  <Shirt size={12} fill="currentColor" /> Mentor
                 </div>
               )}
             </div>
@@ -66,21 +74,31 @@ export default function Profile() {
             </div>
           </div>
           
-          <div>
+          <div className="flex flex-col gap-3">
+            {!isMyProfile && profileInfo.isMentor && (
+              <button 
+                onClick={() => setIsBookingOpen(true)}
+                className="px-8 py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg border-none cursor-pointer text-white bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105"
+              >
+                <Calendar size={20} />
+                Réserver Mentorat ({profileInfo.coachingRate}$/h)
+              </button>
+            )}
+
             {isMyProfile ? (
               <button 
                 onClick={() => {
                   useAuthStore.getState().logout();
                   navigate('/login');
                 }}
-                className="px-6 py-3 rounded-full bg-red-500/10 text-red-500 font-bold flex items-center gap-2 hover:bg-red-500/20 transition-all border-none cursor-pointer"
+                className="px-6 py-3 rounded-full bg-red-500/10 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all border-none cursor-pointer"
               >
                 Déconnexion
               </button>
             ) : (
               <button 
                 onClick={() => toggleFollow(userId)}
-                className={`px-8 py-3 rounded-full font-extrabold flex items-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer text-white ${
+                className={`px-8 py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer text-white ${
                   isFollowed ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-purple-700'
                 }`}
               >
@@ -106,13 +124,13 @@ export default function Profile() {
                {/* 1. Score IA */}
                <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
                  <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span>1. Excellence IA (Moyenne 85%)</span>
-                   {avgScore >= 85 && <Check size={14} className="text-green-500" />}
+                   <span>1. Excellence IA (Moyenne 80%)</span>
+                   {avgScore >= 80 && <Check size={14} className="text-green-500" />}
                  </div>
                  <div className="flex justify-between items-end">
                    <div className="text-lg font-black text-primary">{avgScore}%</div>
                    <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (avgScore/85)*100)}%` }} />
+                     <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (avgScore/80)*100)}%` }} />
                    </div>
                  </div>
                </div>
@@ -120,13 +138,13 @@ export default function Profile() {
                {/* 2. Portfolio */}
                <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
                  <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span>2. Styles Actifs (Requis: 15)</span>
-                   {userPosts.length >= 15 && <Check size={14} className="text-green-500" />}
+                   <span>2. Styles Validés (Requis: 100)</span>
+                   {userPosts.length >= 100 && <Check size={14} className="text-green-500" />}
                  </div>
                  <div className="flex justify-between items-end">
                    <div className="text-lg font-black text-primary">{userPosts.length}</div>
                    <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-orange-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (userPosts.length/15)*100)}%` }} />
+                     <div className="h-full bg-orange-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (userPosts.length/100)*100)}%` }} />
                    </div>
                  </div>
                </div>
@@ -134,13 +152,13 @@ export default function Profile() {
                {/* 3. Popularité */}
                <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
                  <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span>3. Validation Sociale (Abonnés: 1000)</span>
-                   {profileInfo.followers >= 1000 && <Check size={14} className="text-green-500" />}
+                   <span>3. Validation Sociale (Abonnés: 500k)</span>
+                   {profileInfo.followers >= 500000 && <Check size={14} className="text-green-500" />}
                  </div>
                  <div className="flex justify-between items-end">
-                   <div className="text-lg font-black text-primary">{profileInfo.followers}</div>
+                   <div className="text-lg font-black text-primary">{(profileInfo.followers/1000).toFixed(0)}k</div>
                    <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.followers/1000)*100)}%` }} />
+                     <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.followers/500000)*100)}%` }} />
                    </div>
                  </div>
                </div>
@@ -148,13 +166,13 @@ export default function Profile() {
                {/* 4. Conseils Utiles */}
                <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
                  <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span className="flex items-center gap-1">4. Sens Pédagogique <HelpCircle size={12} className="text-gray-400 cursor-help" title="Votes utiles reçus sur vos commentaires" /></span>
-                   {helpfulVotes >= 50 && <Check size={14} className="text-green-500" />}
+                   <span className="flex items-center gap-1">4. Popularité Globale <HelpCircle size={12} className="text-gray-400 cursor-help" /></span>
+                   {profileInfo.likes >= 1000000 && <Check size={14} className="text-green-500" />}
                  </div>
                  <div className="flex justify-between items-end">
-                   <div className="text-lg font-black text-primary">{helpfulVotes} <span className="text-xs text-gray-400">/ 50 votes reçus</span></div>
+                   <div className="text-lg font-black text-primary">{(profileInfo.likes/1000).toFixed(0)}k <span className="text-xs text-gray-400">/ 1M likes récents</span></div>
                    <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (helpfulVotes/50)*100)}%` }} />
+                     <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.likes/1000000)*100)}%` }} />
                    </div>
                  </div>
                </div>
@@ -163,10 +181,10 @@ export default function Profile() {
                <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white col-span-1 md:col-span-2 flex justify-between items-center">
                  <div>
                    <div className="text-xs font-bold text-gray-500 mb-1 flex items-center gap-2">
-                     5. Identité Certifiée 
+                     5. Identité Certifiée (KYC)
                      {isIdentityVerified ? <Check size={14} className="text-green-500" /> : <ShieldCheck size={14} className="text-red-400" />}
                    </div>
-                   <div className="text-sm font-medium text-gray-800">Candidature à soumettre avec vérification O.T.P. et Live Photo.</div>
+                   <div className="text-sm font-medium text-gray-800">Votre profil doit être validé par un vote communautaire massif.</div>
                  </div>
                  <button className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm border-none cursor-pointer ${
                    isIdentityVerified ? 'bg-green-500/10 text-green-600 cursor-default' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
@@ -178,10 +196,26 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Grille de posts */}
-        <h2 className="text-2xl font-black text-gray-800 mb-6 px-4">Styles Récents ({userPosts.length})</h2>
+        {/* Onglets de la Grille */}
+        <div className="flex items-center gap-6 mb-6 px-4 border-b border-gray-100 pb-2">
+          <button 
+             onClick={() => setActiveTab('recent')}
+             className={`text-xl font-black transition-colors bg-transparent border-none cursor-pointer pb-2 ${activeTab === 'recent' ? 'text-gray-800 border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+             Styles Récents ({userPosts.length})
+          </button>
+          {isMyProfile && (
+            <button 
+               onClick={() => setActiveTab('saved')}
+               className={`text-xl font-black transition-colors bg-transparent border-none cursor-pointer pb-2 flex items-center gap-2 ${activeTab === 'saved' ? 'text-gray-800 border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+               <Bookmark size={20} className={activeTab === 'saved' ? 'fill-primary' : ''} /> Garde-Robe ({savedPostsData.length})
+            </button>
+          )}
+        </div>
+        
         <div className="grid grid-cols-3 gap-6 mb-20">
-          {userPosts.map(post => (
+          {displayedPosts.map(post => (
             <div key={post.id} className="aspect-[3/4] rounded-3xl overflow-hidden relative group cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100">
               <img src={post.img} alt="post" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4 text-white font-bold">
@@ -190,13 +224,23 @@ export default function Profile() {
               </div>
             </div>
           ))}
-          {userPosts.length === 0 && (
+          {displayedPosts.length === 0 && (
             <div className="col-span-3 text-center py-20 text-gray-400 font-medium bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-              Aucun style publié pour le moment.
+              {activeTab === 'saved' ? "Aucun style sauvegardé. Explorez le feed pour trouver l'inspiration !" : "Aucun style publié pour le moment."}
             </div>
           )}
         </div>
       </div>
+      
+      {/* Modale de Réservation Sécurisée */}
+      {isBookingOpen && (
+        <BookingModal 
+           onClose={() => setIsBookingOpen(false)} 
+           mentorId={userId}
+           mentorName={profileInfo.tag}
+           rate={profileInfo.coachingRate}
+        />
+      )}
     </div>
   );
 }

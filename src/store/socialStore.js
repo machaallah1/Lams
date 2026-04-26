@@ -1,112 +1,170 @@
 import { create } from 'zustand';
 
-const MOCK_POSTS = [
-  { 
-    id: "p1", 
-    userId: "u1",
-    tag: "@elena_design", 
-    score: "94%", 
-    likes: 235, 
-    comments: 3,
-    shares: 12,
-    img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=2000", 
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150" 
-  },
-  { 
-    id: "p2", 
-    userId: "u2",
-    tag: "@marco_vibe", 
-    score: "88%", 
-    likes: 142, 
-    comments: 1,
-    shares: 8,
-    img: "https://images.unsplash.com/photo-1539109132314-34a9c6553876?auto=format&fit=crop&q=80&w=2000", 
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150" 
-  },
-  { 
-    id: "p3", 
-    userId: "u3",
-    tag: "@sofia_officiel", 
-    score: "97%", 
-    likes: 890, 
-    comments: 2,
-    shares: 45,
-    img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=2000", 
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150" 
-  }
-];
-
-const MOCK_COMMENTS = {
-  "p1": [
-    { id: 101, text: "Le flow est incroyable 🔥", user: "@street_king", timestamp: new Date(Date.now() - 3600000).toISOString(), replies: [{ id: 1011, text: "Grave d'accord !", user: "@marco_vibe", timestamp: new Date(Date.now() - 100000).toISOString() }] },
-    { id: 102, text: "Où as-tu trouvé cette veste ?", user: "@mode_addict", timestamp: new Date(Date.now() - 1800000).toISOString(), replies: [] }
-  ],
-  "p2": [
-    { id: 201, text: "Vraiment propre l'association des couleurs", user: "@design_pro", timestamp: new Date(Date.now() - 7200000).toISOString(), replies: [] }
-  ],
-  "p3": [
-    { id: 301, text: "Je valide fort à 100% 👏", user: "@elena_design", timestamp: new Date(Date.now() - 500000).toISOString(), replies: [] },
-    { id: 302, text: "Magnifique silhouette !", user: "@fashion_guru", timestamp: new Date(Date.now() - 300000).toISOString(), replies: [] }
-  ]
-};
-
-const MOCK_CONVERSATIONS = [
-  {
-    id: "c1",
-    user: { id: "u2", tag: "@marco_vibe", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150" },
-    messages: [
-      { id: "m1", senderId: "u2", text: "Salut ! J'adore ton dernier post 👏", timestamp: new Date(Date.now() - 3600000).toISOString() },
-      { id: "m2", senderId: "me", text: "Merci Marco ! C'est la nouvelle collection.", timestamp: new Date(Date.now() - 3500000).toISOString() }
-    ],
-    unreadCount: 0
-  },
-  {
-    id: "c2",
-    user: { id: "u1", tag: "@elena_design", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150" },
-    messages: [
-      { id: "m3", senderId: "u1", text: "Est-ce que tu penses que cette veste irait avec un jean clair ?", timestamp: new Date(Date.now() - 100000).toISOString() }
-    ],
-    unreadCount: 1
-  }
-];
+// Plus aucun MOCK, tout provient de l'API REST.
 
 export const useSocialStore = create((set, get) => ({
-  posts: MOCK_POSTS,
+  posts: [],
   followedUsers: [],
   likedPosts: [],
   savedPosts: [],
-  postComments: MOCK_COMMENTS, 
-  conversations: MOCK_CONVERSATIONS,
+  postComments: {}, // { postId: [ comments ] }
+  conversations: [],
+  notifications: [],
 
-  sendMessage: (conversationId, text) => set((state) => {
-    const newMsg = { id: Date.now().toString(), senderId: "me", text, timestamp: new Date().toISOString() };
-    const newConvs = state.conversations.map(c => 
-      c.id === conversationId ? { ...c, messages: [...c.messages, newMsg] } : c
-    );
-    return { conversations: newConvs };
-  }),
+  // INITIALISATION UTILISATEUR CONNECTÉ
+  initUserData: async () => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/me', {
+         headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.ok) {
+         const data = await res.json();
+         set({ 
+           likedPosts: data.likes.map(l => l.postId),
+           savedPosts: data.saves.map(s => s.postId),
+           followedUsers: data.following.map(f => f.followingId)
+         });
+      }
+    } catch(e) { console.error(e); }
+  },
 
-  sendPostShare: (friendId, post, friendData) => set((state) => {
-    const existingConv = state.conversations.find(c => c.user.id === friendId);
+  // CHARGEMENT FEED
+  fetchPosts: async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/posts');
+      if(res.ok) {
+        const posts = await res.json();
+        set({ posts });
+      }
+    } catch(e) { console.error(e); }
+  },
+
+  publishPostAPI: async (formData) => {
+    const token = localStorage.getItem('style_token');
+    const res = await fetch('http://localhost:5000/api/posts', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData 
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Pour l'affichage rapide
+      data.img = data.img.startsWith('http') ? data.img : `http://localhost:5000${data.img}`;
+      set((state) => ({ posts: [data, ...state.posts] }));
+      return data; // Return full object with detailed ALGORITHM scores
+    } else {
+      throw new Error(data.error || "Erreur de publication.");
+    }
+  },
+
+  // INTERACTIONS
+  toggleLike: async (postId) => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    // Mise à jour optimiste du Frontend
+    const { likedPosts, posts } = get();
+    const isLiked = likedPosts.includes(postId);
     
-    const newMsg = { 
-      id: Date.now().toString(), 
-      senderId: "me", 
-      type: 'share', 
-      post: post, 
-      text: "Regarde ce style ! 🔥", 
-      timestamp: new Date().toISOString() 
-    };
+    set({
+      likedPosts: isLiked ? likedPosts.filter(id => id !== postId) : [...likedPosts, postId],
+      posts: posts.map(p => p.id === postId ? { ...p, likes: isLiked ? p.likes - 1 : p.likes + 1 } : p)
+    });
+
+    try {
+      await fetch(`http://localhost:5000/api/posts/${postId}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+    } catch(e) { console.error(e); }
+  },
+
+  toggleSave: async (postId) => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    const { savedPosts } = get();
+    const isSaved = savedPosts.includes(postId);
+    
+    set({
+      savedPosts: isSaved ? savedPosts.filter(id => id !== postId) : [...savedPosts, postId],
+    });
+
+    try {
+      await fetch(`http://localhost:5000/api/posts/${postId}/save`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+    } catch(e) { console.error(e); }
+  },
+
+  toggleFollow: async (userId) => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    const { followedUsers } = get();
+    const isFollowed = followedUsers.includes(userId);
+    
+    set({
+      followedUsers: isFollowed ? followedUsers.filter(id => id !== userId) : [...followedUsers, userId],
+    });
+
+    try {
+      await fetch(`http://localhost:5000/api/users/${userId}/follow`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+    } catch(e) { console.error(e); }
+  },
+
+  // COMMENTAIRES
+  fetchComments: async (postId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/posts/${postId}/comments`);
+      if(res.ok) {
+        const comments = await res.json();
+        set(state => ({ postComments: { ...state.postComments, [postId]: comments } }));
+      }
+    } catch(e) {}
+  },
+
+  submitComment: async (postId, text, user) => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    
+    try {
+      const res = await fetch(`http://localhost:5000/api/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ text })
+      });
+      if(res.ok) {
+         const newComment = await res.json();
+         const currentComments = get().postComments[postId] || [];
+         set(state => ({
+            postComments: { ...state.postComments, [postId]: [...currentComments, newComment] },
+            posts: state.posts.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p)
+         }));
+      }
+    } catch(e) {}
+  },
+
+  // NOTIFICATIONS (Local pour le moment)
+  addNotification: (notification) => set((state) => ({
+    notifications: [{ id: Date.now(), timestamp: new Date().toISOString(), read: false, ...notification }, ...state.notifications]
+  })),
+
+  markNotificationsAsRead: () => set((state) => ({
+    notifications: state.notifications.map(n => ({ ...n, read: true }))
+  })),
+
+  // MESSAGERIE
+  sendMentorshipRequest: (mentorId, mentorName, details) => set((state) => {
+    const textMsg = `Demande de mentorat réservée pour le ${details.date} à ${details.time}.\nMessage : ${details.message || "Aucun message."}\nMontant sécurisé : ${details.total.toFixed(2)}$`;
+    
+    state.addNotification({ type: 'booking', text: `Nouvelle réservation de mentorat envoyée à ${mentorName}.` });
+    const newMsg = { id: Date.now().toString(), senderId: "me", text: textMsg, timestamp: new Date().toISOString() };
+    const existingConv = state.conversations.find(c => c.user.id === mentorId);
 
     if (existingConv) {
-      const newConvs = state.conversations.map(c => 
-        c.user.id === friendId ? { ...c, messages: [...c.messages, newMsg] } : c
-      );
-      return { conversations: newConvs };
+      return { conversations: state.conversations.map(c => c.user.id === mentorId ? { ...c, messages: [...c.messages, newMsg] } : c) };
     } else {
       const newConv = {
         id: "c_" + Date.now(),
-        user: friendData,
+        user: { id: mentorId, tag: mentorName, avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" },
         messages: [newMsg],
         unreadCount: 0
       };
@@ -114,69 +172,20 @@ export const useSocialStore = create((set, get) => ({
     }
   }),
 
-  toggleSave: (postId) => set((state) => ({
-    savedPosts: state.savedPosts.includes(postId)
-      ? state.savedPosts.filter(id => id !== postId)
-      : [...state.savedPosts, postId]
-  })),
-
-  toggleFollow: (userId) => set((state) => ({
-    followedUsers: state.followedUsers.includes(userId)
-      ? state.followedUsers.filter(id => id !== userId)
-      : [...state.followedUsers, userId]
-  })),
-
-  toggleLike: (postId) => set((state) => {
-    const isLiked = state.likedPosts.includes(postId);
-    const newLiked = isLiked
-      ? state.likedPosts.filter(id => id !== postId)
-      : [...state.likedPosts, postId];
-    
-    // On simule aussi l'incrémentation/décrémentation des likes globaux
-    const newPosts = state.posts.map(post => {
-      if (post.id === postId) {
-        return { ...post, likes: isLiked ? post.likes - 1 : post.likes + 1 };
-      }
-      return post;
-    });
-
-    return { likedPosts: newLiked, posts: newPosts };
+  sendMessage: (conversationId, text) => set((state) => {
+    const newMsg = { id: Date.now().toString(), senderId: "me", text, timestamp: new Date().toISOString() };
+    const newConvs = state.conversations.map(c => c.id === conversationId ? { ...c, messages: [...c.messages, newMsg] } : c);
+    return { conversations: newConvs };
   }),
 
-  submitComment: (postId, text, user, parentId = null) => set((state) => {
-    const newComment = {
-      id: Date.now(),
-      text,
-      user: user.tag,
-      timestamp: new Date().toISOString(),
-      replies: []
-    };
-    
-    const currentComments = state.postComments[postId] || [];
-    let nextComments;
-
-    if (parentId) {
-      // On ajoute la réponse (nested comment)
-      nextComments = currentComments.map(c => 
-        c.id === parentId ? { ...c, replies: [...(c.replies || []), newComment] } : c
-      );
+  sendPostShare: (friendId, post, friendData) => set((state) => {
+    const existingConv = state.conversations.find(c => c.user.id === friendId);
+    const newMsg = { id: Date.now().toString(), senderId: "me", type: 'share', post: post, text: "Regarde ce style ! 🔥", timestamp: new Date().toISOString() };
+    if (existingConv) {
+      return { conversations: state.conversations.map(c => c.user.id === friendId ? { ...c, messages: [...c.messages, newMsg] } : c) };
     } else {
-      // On ajoute le commentaire à la racine
-      nextComments = [...currentComments, newComment];
+      const newConv = { id: "c_" + Date.now(), user: friendData, messages: [newMsg], unreadCount: 0 };
+      return { conversations: [newConv, ...state.conversations] };
     }
-    
-    // On met aussi à jour le compteur global du post pour toujours avoir le bon décompte
-    const newPosts = state.posts.map(post => {
-        if(post.id === postId) return { ...post, comments: post.comments + 1 };
-        return post;
-    });
-
-    return {
-      posts: newPosts,
-      postComments: {
-        ...state.postComments,
-        [postId]: nextComments
-      }
-    };
-  }),
+  })
 }));

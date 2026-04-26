@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String         @id @default(uuid())
+  tag          String         @unique
+  email        String         @unique
+  password     String
+  avatar       String?        @default("https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150")
+  bio          String?
+  isMentor     Boolean        @default(false)
+  coachingRate Float          @default(30)
+  kycStatus    String         @default("pending") // "pending", "approved", "rejected"
+  
+  posts        Post[]
+  likes        Like[]
+  comments     Comment[]
+  saves        Save[]
+  
+  followers    Follow[]       @relation("userFollowing")
+  following    Follow[]       @relation("userFollower")
+  
+  kycVotesReceived KycVote[]  @relation("votedForUser")
+  kycVotesGiven    KycVote[]  @relation("voterUser")
+
+  createdAt    DateTime       @default(now())
+}
+
+model Post {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  img              String
+  
+  // Nouveau barème IA
+  detectedStyle    String   @default("Inconnu") // Swagg, Traditionnel, Casual, etc.
+  score            Int      @default(0) // Sur 100
+  presenceScore    Int      @default(0)
+  harmonyScore     Int      @default(0)
+  coherenceScore   Int      @default(0) // ou fit/elegance selon la catégorie
+  fitScore         Int      @default(0) // ou cleanliness
+  accessoriesScore Int      @default(0)
+  
+  // Relations dynamiques au lieu de simples compteurs
+  likes            Like[]
+  comments         Comment[]
+  saves            Save[]
+  
+  createdAt        DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) // Un utiisateur ne peut liker qu'une fois
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  usefulVotes Int    @default(0) // Pour les défis de Mentorat
+  createdAt DateTime @default(now())
+}
+
+model Save {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  
+  follower    User     @relation("userFollower", fields: [followerId], references: [id])
+  following   User     @relation("userFollowing", fields: [followingId], references: [id])
+  
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model KycVote {
+  id        String   @id @default(uuid())
+  voterId   String
+  targetId  String
+  isReal    Boolean  // Oui ou Non
+  voter     User     @relation("voterUser", fields: [voterId], references: [id])
+  target    User     @relation("votedForUser", fields: [targetId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([voterId, targetId])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  text           String
+  timestamp      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  text      String
+  read      Boolean  @default(false)
+  timestamp DateTime @default(now())
+}

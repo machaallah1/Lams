@@ -1,15 +1,28 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
 
 export default function Register() {
   const [formData, setFormData] = useState({ pseudo: '', email: '', password: '' });
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const registerAPI = useAuthStore(state => state.registerAPI);
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // Simulate API registration, then redirect to OTP
-    navigate('/verify-otp', { state: { email: formData.email } });
+    setIsLoading(true);
+    setError(null);
+    try {
+      await registerAPI(formData.pseudo, formData.email, formData.password);
+      // Simulate API registration, then redirect to OTP
+      navigate('/verify-otp', { state: { email: formData.email } });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -22,6 +35,7 @@ export default function Register() {
         <p className="text-gray-500 mb-8 font-medium">Créez votre profil et inspirez la communauté</p>
         
         <form onSubmit={handleRegister} className="flex flex-col gap-5">
+          {error && <div className="bg-red-50 text-red-500 font-bold p-3 rounded-xl text-sm border border-red-100">{error}</div>}
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40" size={20} />
             <input 
@@ -56,8 +70,8 @@ export default function Register() {
             />
           </div>
           
-          <button type="submit" className="w-full bg-primary text-white font-black py-4 rounded-2xl mt-4 shadow-[0_10px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] hover:shadow-[0_15px_30px_rgba(168,85,247,0.4)] transition-all cursor-pointer border-none">
-            Créer mon compte
+          <button disabled={isLoading} type="submit" className="w-full bg-primary text-white font-black py-4 rounded-2xl mt-4 shadow-[0_10px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] hover:shadow-[0_15px_30px_rgba(168,85,247,0.4)] transition-all cursor-pointer border-none disabled:opacity-50">
+            {isLoading ? "Création en cours..." : "Création mon compte"}
           </button>
         </form>
 
