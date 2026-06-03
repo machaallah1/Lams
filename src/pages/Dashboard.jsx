@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Dashboard() {
   const navigate = useNavigate();
   const posts = useSocialStore(state => state.posts);
-  
+
   // Get unique mentors from posts or default fallback
   const mentors = [
     { tag: "@sophie_chic", name: "Sophie Chic", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop", bio: "Styliste pro" },
@@ -19,10 +19,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col xl:flex-row gap-8 justify-center items-start max-w-6xl mx-auto p-4">
+    <div className="w-full flex flex-col xl:flex-row gap-8 justify-center items-start max-w-6xl mx-auto p-4">
       {/* Colonne Feed (Centre) */}
-      <div className="flex-1 w-full flex flex-col gap-6 items-center h-full overflow-y-auto scrollbar-none pb-4">
-        
+      <div className="flex-1 min-w-0 w-full flex flex-col gap-6 items-center pb-4">
+
         {/* Mentors en bandeau horizontal pour mobile/tablette (visible sous xl) */}
         <div className="xl:hidden w-full max-w-[600px] flex flex-col gap-3 shrink-0">
           <h3 className="font-black text-gray-800 text-xs flex items-center gap-2 uppercase tracking-wider px-2">
@@ -30,8 +30,8 @@ export default function Dashboard() {
           </h3>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none px-2 snap-x snap-mandatory">
             {mentors.map((mentor, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 onClick={() => {
                   const uId = getUserIdByTag(mentor.tag);
                   navigate('/profile', { state: { userId: uId } });
@@ -57,7 +57,7 @@ export default function Dashboard() {
 
       {/* Colonne Suggestions / Tendances (Droite) */}
       <div className="w-[320px] hidden xl:flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-500 py-4">
-        
+
         {/* Mentors Populaires */}
         <div className="glass rounded-[30px] p-6 flex flex-col gap-4">
           <h3 className="font-black text-gray-800 text-sm flex items-center gap-2 uppercase tracking-wider">
@@ -73,7 +73,7 @@ export default function Dashboard() {
                     <span className="text-[10px] text-gray-400 font-semibold">{mentor.bio}</span>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     const uId = getUserIdByTag(mentor.tag);
                     navigate('/profile', { state: { userId: uId } });
