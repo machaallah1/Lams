@@ -22,18 +22,18 @@ export default function Settings() {
   };
 
   return (
-    <div className="w-full h-full p-10 overflow-y-auto animate-in fade-in duration-500">
+    <div className="w-full h-full p-4 sm:p-10 overflow-y-auto animate-in fade-in duration-500">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-black text-gray-800 mb-8 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-800 mb-6 sm:mb-8 flex items-center gap-3">
           <SettingsIcon className="text-primary" size={32} /> Préférences
         </h1>
 
-        <div className="flex gap-8">
-          {/* Menu Latéral des Paramètres */}
-          <div className="w-1/3 flex flex-col gap-2">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+          {/* Menu Latéral des Paramètres (Scrollable horizontalement sur mobile) */}
+          <div className="w-full md:w-1/3 flex flex-row md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 shrink-0 scrollbar-none">
             <button 
               onClick={() => setActiveTab('profile')}
-              className={`flex items-center gap-3 w-full p-4 rounded-2xl font-bold border-none cursor-pointer text-left transition-all ${
+              className={`flex items-center gap-2 sm:gap-3 p-3.5 sm:p-4 rounded-2xl font-bold border-none cursor-pointer text-left transition-all shrink-0 whitespace-nowrap ${
                 activeTab === 'profile' ? 'bg-primary text-white shadow-md' : 'bg-transparent text-gray-500 hover:bg-white hover:text-gray-800'
               }`}
             >
@@ -41,25 +41,25 @@ export default function Settings() {
             </button>
             <button 
               onClick={() => setActiveTab('mentorat')}
-              className={`flex items-center gap-3 w-full p-4 rounded-2xl font-bold border-none cursor-pointer text-left transition-all ${
+              className={`flex items-center gap-2 sm:gap-3 p-3.5 sm:p-4 rounded-2xl font-bold border-none cursor-pointer text-left transition-all shrink-0 whitespace-nowrap ${
                 activeTab === 'mentorat' ? 'bg-primary text-white shadow-md' : 'bg-transparent text-gray-500 hover:bg-white hover:text-gray-800'
               }`}
             >
               <Briefcase size={20} /> Mentorat & Coaching
             </button>
-            <button className="flex items-center gap-3 w-full p-4 rounded-2xl font-bold bg-transparent text-gray-500 hover:bg-white hover:text-gray-800 border-none cursor-pointer text-left transition-all">
+            <button className="flex items-center gap-2 sm:gap-3 p-3.5 sm:p-4 rounded-2xl font-bold bg-transparent text-gray-500 hover:bg-white hover:text-gray-800 border-none cursor-pointer text-left transition-all shrink-0 whitespace-nowrap">
               <Bell size={20} /> Notifications
             </button>
-            <button className="flex items-center gap-3 w-full p-4 rounded-2xl font-bold bg-transparent text-gray-500 hover:bg-white hover:text-gray-800 border-none cursor-pointer text-left transition-all">
+            <button className="flex items-center gap-2 sm:gap-3 p-3.5 sm:p-4 rounded-2xl font-bold bg-transparent text-gray-500 hover:bg-white hover:text-gray-800 border-none cursor-pointer text-left transition-all shrink-0 whitespace-nowrap">
               <Shield size={20} /> Confidentialité
             </button>
-            <button className="flex items-center gap-3 w-full p-4 rounded-2xl font-bold bg-transparent text-gray-500 hover:bg-white hover:text-gray-800 border-none cursor-pointer text-left transition-all">
+            <button className="flex items-center gap-2 sm:gap-3 p-3.5 sm:p-4 rounded-2xl font-bold bg-transparent text-gray-500 hover:bg-white hover:text-gray-800 border-none cursor-pointer text-left transition-all shrink-0 whitespace-nowrap">
               <Lock size={20} /> Sécurité
             </button>
           </div>
 
           {/* Formulaire Actif */}
-          <div className="w-2/3 glass p-8 rounded-[40px] animate-in slide-in-from-right-4 duration-300">
+          <div className="w-full md:w-2/3 glass p-5 sm:p-8 rounded-[30px] sm:rounded-[40px] animate-in slide-in-from-right-4 duration-300">
             {activeTab === 'profile' && (
               <>
                 <h3 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-4">Informations Personnelles</h3>

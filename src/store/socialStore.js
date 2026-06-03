@@ -36,7 +36,21 @@ export const useSocialStore = create((set, get) => ({
       const res = await fetch('http://localhost:5000/api/posts');
       if(res.ok) {
         const posts = await res.json();
-        set({ posts });
+        const formatted = posts.map(p => ({
+          ...p,
+          tag: p.user?.tag || p.tag || "@inconnu",
+          avatar: p.user?.avatar || p.avatar || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
+          isMentor: p.user?.isMentor || p.isMentor || false,
+          img: p.img.startsWith('http') ? p.img : `http://localhost:5000${p.img}`,
+          aiEvaluation: {
+            styleScore: p.presenceScore || 0,
+            harmonyScore: p.harmonyScore || 0,
+            coherenceScore: p.coherenceScore || 0,
+            cleanlinessScore: p.fitScore || 0,
+            accessoriesScore: p.accessoriesScore || 0
+          }
+        }));
+        set({ posts: formatted });
       }
     } catch(e) { console.error(e); }
   },
@@ -51,9 +65,22 @@ export const useSocialStore = create((set, get) => ({
     const data = await res.json();
     if (res.ok) {
       // Pour l'affichage rapide
-      data.img = data.img.startsWith('http') ? data.img : `http://localhost:5000${data.img}`;
-      set((state) => ({ posts: [data, ...state.posts] }));
-      return data; // Return full object with detailed ALGORITHM scores
+      const formatted = {
+        ...data,
+        tag: data.user?.tag || data.tag || "@inconnu",
+        avatar: data.user?.avatar || data.avatar || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
+        isMentor: data.user?.isMentor || data.isMentor || false,
+        img: data.img.startsWith('http') ? data.img : `http://localhost:5000${data.img}`,
+        aiEvaluation: {
+          styleScore: data.presenceScore || 0,
+          harmonyScore: data.harmonyScore || 0,
+          coherenceScore: data.coherenceScore || 0,
+          cleanlinessScore: data.fitScore || 0,
+          accessoriesScore: data.accessoriesScore || 0
+        }
+      };
+      set((state) => ({ posts: [formatted, ...state.posts] }));
+      return formatted; // Return full object with detailed ALGORITHM scores
     } else {
       throw new Error(data.error || "Erreur de publication.");
     }

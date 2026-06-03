@@ -22,4 +22,11 @@
   .bubble-base {
     @apply flex items-center justify-center rounded-full bg-primary/5 border border-primary/10 backdrop-blur-md cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(168,85,247,0.08)];
   }
+  .scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
 }

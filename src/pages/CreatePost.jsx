@@ -46,20 +46,20 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="w-full h-full flex justify-center items-center animate-in fade-in duration-500">
-      <div className="glass w-[600px] p-10 rounded-[40px] text-center">
-        <h1 className="text-3xl font-black text-primary mb-2">Partagez votre Style</h1>
-        <p className="text-gray-500 mb-8 font-medium">L'IA analysera automatiquement votre tenue.</p>
+    <div className="w-full h-full flex justify-center items-center animate-in fade-in duration-500 px-4">
+      <div className="glass w-full max-w-[600px] p-6 sm:p-10 rounded-[30px] sm:rounded-[40px] text-center shadow-lg">
+        <h1 className="text-2xl sm:text-3xl font-black text-primary mb-2">Partagez votre Style</h1>
+        <p className="text-sm sm:text-base text-gray-500 mb-6 sm:mb-8 font-medium">L'IA analysera automatiquement votre tenue.</p>
         
-        <form onSubmit={handlePublish} className="flex flex-col gap-6">
+        <form onSubmit={handlePublish} className="flex flex-col gap-4 sm:gap-6">
           {!imgUrl ? (
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-full h-[350px] border-2 border-dashed border-primary/40 rounded-3xl bg-primary/5 flex flex-col items-center justify-center text-primary/70 cursor-pointer hover:bg-primary/10 hover:border-primary/60 transition-all duration-300 group"
+              className="w-full h-[250px] sm:h-[350px] border-2 border-dashed border-primary/40 rounded-3xl bg-primary/5 flex flex-col items-center justify-center text-primary/70 cursor-pointer hover:bg-primary/10 hover:border-primary/60 transition-all duration-300 group"
             >
-              <Upload size={48} className="mb-4 text-primary group-hover:scale-110 transition-transform duration-300" />
-              <p className="font-black text-xl mb-2 text-primary">Sélectionnez une photo</p>
-              <p className="text-sm font-medium text-primary/60">Parcourez votre appareil (JPG, PNG)</p>
+              <Upload size={36} className="mb-3 text-primary group-hover:scale-110 transition-transform duration-300 sm:w-12 sm:h-12" />
+              <p className="font-black text-lg sm:text-xl mb-1 text-primary">Sélectionnez une photo</p>
+              <p className="text-xs sm:text-sm font-medium text-primary/60">Parcourez votre appareil (JPG, PNG)</p>
               <input 
                 type="file"
                 accept="image/*"
@@ -69,7 +69,7 @@ export default function CreatePost() {
               />
             </div>
           ) : (
-            <div className="relative w-full h-[400px] rounded-3xl overflow-hidden shadow-lg group bg-black/5 flex items-center justify-center">
+            <div className="relative w-full h-[280px] sm:h-[400px] rounded-3xl overflow-hidden shadow-lg group bg-black/5 flex items-center justify-center">
               <img src={imgUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
               <button 
                 type="button" 

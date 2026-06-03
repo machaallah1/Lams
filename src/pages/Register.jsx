@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock, Cpu } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useToastStore } from '../store/toastStore';
 
 export default function Register() {
   const [formData, setFormData] = useState({ pseudo: '', email: '', password: '' });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const registerAPI = useAuthStore(state => state.registerAPI);
+  const addToast = useToastStore(state => state.addToast);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
@@ -16,68 +18,146 @@ export default function Register() {
     setError(null);
     try {
       await registerAPI(formData.pseudo, formData.email, formData.password);
-      // Simulate API registration, then redirect to OTP
-      navigate('/verify-otp', { state: { email: formData.email } });
+      addToast('Inscription réussie ! Bienvenue sur Lams.', 'success');
+      // Redirect to home directly since the backend does not use OTP
+      navigate('/');
     } catch (err) {
       setError(err.message);
+      addToast(err.message || "Erreur d'inscription", 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] flex flex-col justify-center items-center relative overflow-hidden animate-in fade-in duration-500">
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-primary/30 rounded-full blur-[100px]" />
+    <div className="w-screen h-screen flex overflow-hidden font-inter bg-white relative">
       
-      <div className="glass w-full max-w-md p-10 rounded-[40px] z-10 text-center relative shadow-xl">
-        <h1 className="text-4xl font-black text-primary mb-2 tracking-tighter">REJOINDRE</h1>
-        <p className="text-gray-500 mb-8 font-medium">Créez votre profil et inspirez la communauté</p>
+      {/* Côté Gauche - Grand Visuel Fashion avec Carte de Style */}
+      <div 
+        className="hidden lg:flex lg:w-7/12 relative flex-col justify-between p-16 text-white overflow-hidden select-none bg-cover bg-center"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1200&auto=format&fit=crop')` }}
+      >
+        {/* Overlay Dégradé Sombre pour la lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/90 via-indigo-950/75 to-pink-900/50 mix-blend-multiply pointer-events-none" />
         
-        <form onSubmit={handleRegister} className="flex flex-col gap-5">
-          {error && <div className="bg-red-50 text-red-500 font-bold p-3 rounded-xl text-sm border border-red-100">{error}</div>}
-          <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40" size={20} />
-            <input 
-              type="text" 
-              placeholder="Pseudo (ex: @mon_style)" 
-              className="w-full bg-white/60 border border-primary/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-700 placeholder-gray-400"
-              value={formData.pseudo}
-              onChange={e => setFormData({...formData, pseudo: e.target.value})}
-              required
-            />
-          </div>
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40" size={20} />
-            <input 
-              type="email" 
-              placeholder="Adresse Email" 
-              className="w-full bg-white/60 border border-primary/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-700 placeholder-gray-400"
-              value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value})}
-              required
-            />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40" size={20} />
-            <input 
-              type="password" 
-              placeholder="Mot de passe" 
-              className="w-full bg-white/60 border border-primary/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-700 placeholder-gray-400"
-              value={formData.password}
-              onChange={e => setFormData({...formData, password: e.target.value})}
-              required
-            />
-          </div>
-          
-          <button disabled={isLoading} type="submit" className="w-full bg-primary text-white font-black py-4 rounded-2xl mt-4 shadow-[0_10px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] hover:shadow-[0_15px_30px_rgba(168,85,247,0.4)] transition-all cursor-pointer border-none disabled:opacity-50">
-            {isLoading ? "Création en cours..." : "Création mon compte"}
-          </button>
-        </form>
-
-        <div className="mt-8 text-sm font-medium text-gray-500">
-          Déjà un compte ? <Link to="/login" className="text-primary font-bold hover:underline">Se connecter</Link>
+        {/* Logo/Brand */}
+        <div className="z-10 flex items-center gap-2">
+          <span className="text-3xl font-black tracking-tighter uppercase">Lams</span>
         </div>
+
+        {/* Carte de Style Vestimentaire Flottante (Visuelle) */}
+        <div className="z-10 my-auto w-full flex flex-col items-center">
+          <h1 className="text-5xl font-black mb-8 leading-tight tracking-tight text-center max-w-md">
+            Rejoignez Lams
+          </h1>
+          
+          {/* Mini-carte de style vestimentaire avec image réelle */}
+          <div className="glass max-w-sm rounded-[35px] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 relative animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            {/* Tag IA */}
+            <div className="absolute top-8 right-8 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-black text-primary flex items-center gap-1.5 shadow-md">
+              <Cpu size={14} className="text-primary" /> 87 IA
+            </div>
+            {/* Image de mode réelle */}
+            <div className="w-[280px] h-[340px] rounded-[24px] overflow-hidden mb-4 bg-black/10">
+              <img 
+                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=400&auto=format&fit=crop" 
+                alt="Style vestimentaire" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {/* Infos Style */}
+            <div className="text-left px-1">
+              <span className="text-[10px] text-white/60 font-black uppercase tracking-wider">Style Détecté</span>
+              <h3 className="text-lg font-black text-white mt-0.5">Streetwear & Urban Casual</h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="z-10 text-sm text-white/60 font-semibold">
+          © 2026 Lams. Tous droits réservés.
+        </div>
+      </div>
+
+      {/* Côté Droit - Formulaire d'Inscription */}
+      <div className="w-full lg:w-5/12 h-full flex flex-col justify-center items-center px-10 sm:px-20 relative bg-white overflow-hidden">
+        
+        {/* Motifs de vêtements en filigrane discret à droite */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] text-primary">
+          <Cpu className="absolute top-[10%] right-[10%] w-32 h-32 rotate-45" />
+          <Cpu className="absolute bottom-[10%] left-[10%] w-40 h-40 -rotate-12" />
+        </div>
+
+        <div className="w-full max-w-md flex flex-col z-10">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-2 mb-10">
+            <span className="text-2xl font-black text-primary uppercase tracking-tighter">Lams</span>
+          </div>
+
+          <h2 className="text-3xl font-black text-gray-800 tracking-tight mb-2">
+            INSCRIPTION
+          </h2>
+          <p className="text-gray-400 font-semibold text-sm mb-10">
+            Créez votre compte pour exprimer votre style
+          </p>
+
+          {error && (
+            <div className="bg-red-50 text-red-500 font-bold p-4 rounded-2xl text-sm border border-red-100 mb-6 animate-in fade-in duration-300">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="flex flex-col gap-6 w-full">
+            <div className="relative">
+              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Pseudo (ex: @mon_style)" 
+                className="w-full bg-[#f3f4f6]/60 border border-transparent rounded-full py-4 pl-14 pr-6 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-700 placeholder-gray-400 text-sm"
+                value={formData.pseudo}
+                onChange={e => setFormData({...formData, pseudo: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="relative">
+              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type="email" 
+                placeholder="Adresse email" 
+                className="w-full bg-[#f3f4f6]/60 border border-transparent rounded-full py-4 pl-14 pr-6 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-700 placeholder-gray-400 text-sm"
+                value={formData.email}
+                onChange={e => setFormData({...formData, email: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type="password" 
+                placeholder="Mot de passe" 
+                className="w-full bg-[#f3f4f6]/60 border border-transparent rounded-full py-4 pl-14 pr-6 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-700 placeholder-gray-400 text-sm"
+                value={formData.password}
+                onChange={e => setFormData({...formData, password: e.target.value})}
+                required
+              />
+            </div>
+
+            <button 
+              disabled={isLoading} 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white font-black py-4 rounded-full mt-4 shadow-[0_10px_20px_rgba(168,85,247,0.25)] hover:scale-[1.02] hover:shadow-[0_15px_25px_rgba(168,85,247,0.35)] transition-all cursor-pointer border-none disabled:opacity-50 text-sm uppercase tracking-wider"
+            >
+              {isLoading ? 'Création en cours...' : 'Créer mon compte'}
+            </button>
+          </form>
+
+          <div className="mt-12 text-center text-sm font-medium text-gray-500">
+            Déjà un compte ? <Link to="/login" className="text-primary font-bold hover:underline">Se connecter</Link>
+          </div>
+        </div>
+
       </div>
     </div>
   );

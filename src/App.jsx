@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
@@ -12,7 +13,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
 import { useAuthStore } from './store/authStore';
-import ToastContainer from './components/Ui/ToastContainer';
+import { useSocialStore } from './store/socialStore';
+import { Toaster } from 'sonner';
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -20,13 +22,28 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const fetchCurrentUser = useAuthStore(state => state.fetchCurrentUser);
+  const initUserData = useSocialStore(state => state.initUserData);
+  const fetchPosts = useSocialStore(state => state.fetchPosts);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
+  useEffect(() => {
+    fetchPosts();
+    if (isAuthenticated) {
+      fetchCurrentUser().then((user) => {
+        if (user) {
+          initUserData();
+        }
+      });
+    }
+  }, [isAuthenticated, fetchCurrentUser, initUserData, fetchPosts]);
+
   return (
     <BrowserRouter>
-      <ToastContainer />
+      <Toaster position="top-center" />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
         
         <Route path="/" element={
           <ProtectedRoute>

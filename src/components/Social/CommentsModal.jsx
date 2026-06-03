@@ -40,11 +40,11 @@ export default function CommentsModal({ post, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="w-[90vw] h-[90vh] max-w-[1200px] flex overflow-hidden animate-in zoom-in-95 duration-300"
+        className="w-full max-w-lg md:max-w-[1200px] h-[85vh] md:h-[90vh] flex overflow-hidden animate-in zoom-in-95 duration-300 mx-4 rounded-[30px] shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Partie Gauche : Post */}
-        <div className="w-1/2 h-full flex flex-col relative border-r border-primary/10 bg-white shadow-[-50px_0_100px_rgba(168,85,247,0.1)] rounded-l-[30px] z-10">
+        <div className="w-full md:w-1/2 h-full hidden md:flex flex-col relative border-r border-primary/10 bg-white shadow-[-50px_0_100px_rgba(168,85,247,0.1)] rounded-l-[30px] z-10">
           <div className="p-5 border-b border-primary/10 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <img src={post.avatar} alt="avatar" className="w-10 h-10 rounded-full border-2 border-primary/20 shadow-sm object-cover" />
@@ -66,15 +66,15 @@ export default function CommentsModal({ post, onClose }) {
         </div>
 
         {/* Partie Droite : Commentaires */}
-        <div className="w-1/2 h-full flex flex-col bg-gray-50 rounded-r-[30px] shadow-xl overflow-hidden">
-          <div className="p-5 border-b border-primary/10 bg-white flex justify-between items-center shadow-sm z-10">
-            <h3 className="text-lg font-black text-primary m-0 uppercase tracking-widest">Discussions</h3>
+        <div className="w-full md:w-1/2 h-full flex flex-col bg-gray-50 rounded-[30px] md:rounded-l-none md:rounded-r-[30px] shadow-xl overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-primary/10 bg-white flex justify-between items-center shadow-sm z-10">
+            <h3 className="text-lg font-black text-primary m-0 uppercase tracking-widest">Commentaires</h3>
             <button onClick={onClose} className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors border-none cursor-pointer">
               <X size={18} />
             </button>
           </div>
           
-          <div className="flex-1 p-5 overflow-y-auto bg-gray-50/50">
+          <div className="flex-1 p-4 sm:p-5 overflow-y-auto bg-gray-50/50">
             {comments.length === 0 ? (
               <div className="text-center py-10 text-gray-400 flex flex-col items-center">
                 <MessageCircle size={40} className="opacity-30 mb-2" />
@@ -126,7 +126,7 @@ export default function CommentsModal({ post, onClose }) {
             )}
           </div>
 
-          <div className="p-5 border-t border-primary/10 bg-white flex flex-col gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.02)] z-10">
+          <div className="p-4 sm:p-5 border-t border-primary/10 bg-white flex flex-col gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.02)] z-10">
             {replyingTo && (
               <div className="flex items-center justify-between bg-primary/10 px-4 py-2 rounded-xl mb-1">
                 <span className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-2"><Reply size={14}/> En réponse à {replyingTo.user}</span>
@@ -135,14 +135,14 @@ export default function CommentsModal({ post, onClose }) {
                 </button>
               </div>
             )}
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <input 
                 ref={inputRef}
                 type="text" 
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
                 placeholder={replyingTo ? "Écrivez votre réponse..." : "Écrire un commentaire..."}
-                className="flex-1 px-5 py-3 border border-primary/20 rounded-2xl outline-none text-sm bg-gray-50 focus:border-primary focus:bg-white transition-all text-gray-700 font-medium"
+                className="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 border border-primary/20 rounded-2xl outline-none text-xs sm:text-sm bg-gray-50 focus:border-primary focus:bg-white transition-all text-gray-700 font-medium"
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               />
               <button 

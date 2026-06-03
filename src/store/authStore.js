@@ -17,6 +17,42 @@ export const useAuthStore = create((set) => ({
   
   updateUser: (newData) => set((state) => ({ user: { ...state.user, ...newData } })),
 
+  fetchCurrentUser: async () => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return null;
+    try {
+      const res = await fetch('http://localhost:5000/api/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.ok) {
+        const data = await res.json();
+        if (!data || !data.id) {
+          localStorage.removeItem('style_token');
+          set({ user: null, isAuthenticated: false });
+          return null;
+        }
+        const userData = { 
+          id: data.id, 
+          tag: data.tag, 
+          email: data.email, 
+          avatar: data.avatar, 
+          isMentor: data.isMentor, 
+          kycStatus: data.kycStatus, 
+          coachingRate: data.coachingRate 
+        };
+        set({ user: userData, isAuthenticated: true });
+        return userData;
+      } else {
+        localStorage.removeItem('style_token');
+        set({ user: null, isAuthenticated: false });
+        return null;
+      }
+    } catch(e) {
+      console.error(e);
+      return null;
+    }
+  },
+
   // Connexion API Réelle
   loginAPI: async (email, password) => {
     const res = await fetch('http://localhost:5000/api/auth/login', {

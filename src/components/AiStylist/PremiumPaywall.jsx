@@ -2,8 +2,8 @@ import { Sparkles, Check, Lock } from 'lucide-react';
 
 export default function PremiumPaywall({ onSubscribe }) {
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-white/40 backdrop-blur-md animate-in fade-in">
-      <div className="bg-white rounded-[40px] max-w-lg w-full p-10 shadow-2xl text-center relative overflow-hidden border border-purple-100">
+    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-white/40 backdrop-blur-md animate-in fade-in p-4">
+      <div className="bg-white rounded-[30px] sm:rounded-[40px] max-w-lg w-full p-6 sm:p-10 shadow-2xl text-center relative overflow-hidden border border-purple-100">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/20 to-purple-500/10 -z-10" />
         
         <div className="w-20 h-20 bg-gradient-to-tr from-primary to-purple-500 rounded-full flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-purple-500/30">
