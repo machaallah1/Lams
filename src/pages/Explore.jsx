@@ -53,13 +53,13 @@ export default function Explore() {
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-10 overflow-y-auto animate-in fade-in duration-500">
+    <div className="w-full md:h-full p-4 md:p-10 md:overflow-y-auto animate-in fade-in duration-500">
       <div className="max-w-6xl mx-auto">
         <div className="relative mb-6 sm:mb-10">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-primary/50" size={24} />
-          <input 
-            type="text" 
-            placeholder="Rechercher des styles, des créateurs..." 
+          <input
+            type="text"
+            placeholder="Rechercher des styles, des créateurs..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="w-full glass rounded-full py-4 sm:py-5 pl-16 pr-8 text-base sm:text-lg outline-none focus:border-primary transition-all text-primary font-medium shadow-sm"
@@ -67,7 +67,7 @@ export default function Explore() {
         </div>
 
         <h2 className="text-xl sm:text-2xl font-black text-gray-800 mb-4 sm:mb-6 px-2 sm:px-4">Tendances Actuelles</h2>
-        <div 
+        <div
           ref={scrollContainerRef}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}

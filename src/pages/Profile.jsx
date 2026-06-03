@@ -12,7 +12,7 @@ export default function Profile() {
   const { posts, followedUsers, savedPosts, toggleFollow, conversations } = useSocialStore();
   const currentUser = useAuthStore(auth => auth.user);
   const addToast = useToastStore(state => state.addToast);
-  
+
   const userId = state?.userId || currentUser?.id;
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function Profile() {
   const handleStartChat = () => {
     const existing = conversations.find(c => c.user.id === userId);
     const convId = existing ? existing.id : [currentUser?.id, userId].sort().join('_');
-    
+
     if (!existing && profileInfo) {
       useSocialStore.setState(state => ({
         conversations: [
@@ -61,7 +61,7 @@ export default function Profile() {
         ]
       }));
     }
-    
+
     navigate('/messages', { state: { activeConvId: convId } });
   };
   const [activeTab, setActiveTab] = useState('recent');
@@ -112,9 +112,9 @@ export default function Profile() {
     const walk = (x - startX.current) * 1.5; // Scroll speed
     scrollContainerRef.current.scrollLeft = scrollLeftStart.current - walk;
   };
-  
-  const avgScore = userPosts.length > 0 
-    ? Math.round(userPosts.reduce((acc, p) => acc + parseInt(p.score), 0) / userPosts.length) 
+
+  const avgScore = userPosts.length > 0
+    ? Math.round(userPosts.reduce((acc, p) => acc + parseInt(p.score), 0) / userPosts.length)
     : 0;
 
   // En attendant l'implémentation de la vérification par KYC Vote communautaire
@@ -131,7 +131,7 @@ export default function Profile() {
   } : isMyProfile ? {
     tag: currentUser?.tag,
     avatar: currentUser?.avatar,
-    followers: 140, 
+    followers: 140,
     following: followedUsers.length,
     likes: 0,
     isMentor: currentUser?.isMentor || false,
@@ -139,7 +139,7 @@ export default function Profile() {
   } : {
     tag: "@inconnu",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
-    followers: 0, 
+    followers: 0,
     following: 0,
     likes: 0,
     isMentor: false,
@@ -149,7 +149,7 @@ export default function Profile() {
   return (
     <div className="w-full h-full p-4 sm:p-10 overflow-y-auto animate-in fade-in duration-500 relative">
       <div className="max-w-4xl mx-auto">
-        
+
         {/* Header Profile */}
         <div className="glass rounded-[30px] sm:rounded-[40px] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 mb-8 text-center md:text-left">
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
@@ -173,10 +173,10 @@ export default function Profile() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-3 w-full md:w-auto">
             {!isMyProfile && profileInfo.isMentor && (
-              <button 
+              <button
                 onClick={() => handleAuthRequiredAction("réserver un mentorat", () => setIsBookingOpen(true))}
                 className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg border-none cursor-pointer text-white bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105 text-sm"
               >
@@ -186,7 +186,7 @@ export default function Profile() {
             )}
 
             {isMyProfile ? (
-              <button 
+              <button
                 onClick={() => {
                   useAuthStore.getState().logout();
                   navigate('/login');
@@ -197,16 +197,15 @@ export default function Profile() {
               </button>
             ) : (
               <div className="flex gap-2.5 w-full sm:w-auto">
-                <button 
+                <button
                   onClick={() => handleAuthRequiredAction("s'abonner à ce créateur", () => toggleFollow(userId))}
-                  className={`flex-1 sm:flex-none px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer text-white text-sm ${
-                    isFollowed ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-purple-700'
-                  }`}
+                  className={`flex-1 sm:flex-none px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer text-white text-sm ${isFollowed ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-purple-700'
+                    }`}
                 >
                   {isFollowed ? <Check size={18} /> : <Plus size={18} />}
                   {isFollowed ? "Suivi" : "Suivre"}
                 </button>
-                <button 
+                <button
                   onClick={() => handleAuthRequiredAction("contacter ce créateur", handleStartChat)}
                   className="flex-1 sm:flex-none px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 text-sm"
                 >
@@ -221,109 +220,108 @@ export default function Profile() {
         {/* SECTION DASHBOARD MENTOR (Les 5 conditions) */}
         {isMyProfile && !profileInfo.isMentor && (
           <div className="bg-gradient-to-br from-primary/10 to-purple-500/5 rounded-3xl p-6 mb-10 border border-primary/20 relative overflow-hidden group">
-             <ShieldCheck size={180} className="absolute -right-10 -bottom-10 text-primary/10 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none" />
-             <h3 className="text-xl font-black text-primary mb-2 flex items-center gap-2">
-               <TrendingUp size={20} /> Devenez "Mentor de Style"
-             </h3>
-             <p className="text-sm text-gray-600 mb-6 max-w-xl">
-               Prouvez votre expertise à l'IA et à la communauté pour débloquer le badge Mentor et devenir un guide officiel. Complétez ces 5 conditions :
-             </p>
-             
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-               {/* 1. Score IA */}
-               <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
-                 <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span>1. Excellence IA (Moyenne 80%)</span>
-                   {avgScore >= 80 && <Check size={14} className="text-green-500" />}
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <div className="text-lg font-black text-primary">{avgScore}%</div>
-                   <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (avgScore/80)*100)}%` }} />
-                   </div>
-                 </div>
-               </div>
-               
-               {/* 2. Portfolio */}
-               <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
-                 <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span>2. Styles Validés (Requis: 100)</span>
-                   {userPosts.length >= 100 && <Check size={14} className="text-green-500" />}
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <div className="text-lg font-black text-primary">{userPosts.length}</div>
-                   <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-orange-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (userPosts.length/100)*100)}%` }} />
-                   </div>
-                 </div>
-               </div>
+            <ShieldCheck size={180} className="absolute -right-10 -bottom-10 text-primary/10 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none" />
+            <h3 className="text-xl font-black text-primary mb-2 flex items-center gap-2">
+              <TrendingUp size={20} /> Devenez "Mentor de Style"
+            </h3>
+            <p className="text-sm text-gray-600 mb-6 max-w-xl">
+              Prouvez votre expertise à l'IA et à la communauté pour débloquer le badge Mentor et devenir un guide officiel. Complétez ces 5 conditions :
+            </p>
 
-               {/* 3. Popularité */}
-               <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
-                 <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span>3. Validation Sociale (Abonnés: 500k)</span>
-                   {profileInfo.followers >= 500000 && <Check size={14} className="text-green-500" />}
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <div className="text-lg font-black text-primary">{(profileInfo.followers/1000).toFixed(0)}k</div>
-                   <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.followers/500000)*100)}%` }} />
-                   </div>
-                 </div>
-               </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+              {/* 1. Score IA */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
+                <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
+                  <span>1. Excellence IA (Moyenne 80%)</span>
+                  {avgScore >= 80 && <Check size={14} className="text-green-500" />}
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-lg font-black text-primary">{avgScore}%</div>
+                  <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (avgScore / 80) * 100)}%` }} />
+                  </div>
+                </div>
+              </div>
 
-               {/* 4. Conseils Utiles */}
-               <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
-                 <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
-                   <span className="flex items-center gap-1">4. Popularité Globale <HelpCircle size={12} className="text-gray-400 cursor-help" /></span>
-                   {profileInfo.likes >= 1000000 && <Check size={14} className="text-green-500" />}
-                 </div>
-                 <div className="flex justify-between items-end">
-                   <div className="text-lg font-black text-primary">{(profileInfo.likes/1000).toFixed(0)}k <span className="text-xs text-gray-400">/ 1M likes récents</span></div>
-                   <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                     <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.likes/1000000)*100)}%` }} />
-                   </div>
-                 </div>
-               </div>
+              {/* 2. Portfolio */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
+                <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
+                  <span>2. Styles Validés (Requis: 100)</span>
+                  {userPosts.length >= 100 && <Check size={14} className="text-green-500" />}
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-lg font-black text-primary">{userPosts.length}</div>
+                  <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-orange-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (userPosts.length / 100) * 100)}%` }} />
+                  </div>
+                </div>
+              </div>
 
-               {/* 5. Identité Vérifiée */}
-               <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white col-span-1 md:col-span-2 flex justify-between items-center">
-                 <div>
-                   <div className="text-xs font-bold text-gray-500 mb-1 flex items-center gap-2">
-                     5. Identité Certifiée (KYC)
-                     {isIdentityVerified ? <Check size={14} className="text-green-500" /> : <ShieldCheck size={14} className="text-red-400" />}
-                   </div>
-                   <div className="text-sm font-medium text-gray-800">Votre profil doit être validé par un vote communautaire massif.</div>
-                 </div>
-                 <button className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm border-none cursor-pointer ${
-                   isIdentityVerified ? 'bg-green-500/10 text-green-600 cursor-default' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
-                 }`}>
-                   {isIdentityVerified ? 'Profil Vérifié' : 'Démarrer la vérification'}
-                 </button>
-               </div>
-             </div>
+              {/* 3. Popularité */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
+                <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
+                  <span>3. Validation Sociale (Abonnés: 500k)</span>
+                  {profileInfo.followers >= 500000 && <Check size={14} className="text-green-500" />}
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-lg font-black text-primary">{(profileInfo.followers / 1000).toFixed(0)}k</div>
+                  <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-green-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.followers / 500000) * 100)}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Conseils Utiles */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white">
+                <div className="text-xs font-bold text-gray-500 mb-2 flex justify-between">
+                  <span className="flex items-center gap-1">4. Popularité Globale <HelpCircle size={12} className="text-gray-400 cursor-help" /></span>
+                  {profileInfo.likes >= 1000000 && <Check size={14} className="text-green-500" />}
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-lg font-black text-primary">{(profileInfo.likes / 1000).toFixed(0)}k <span className="text-xs text-gray-400">/ 1M likes récents</span></div>
+                  <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (profileInfo.likes / 1000000) * 100)}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Identité Vérifiée */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-white col-span-1 md:col-span-2 flex justify-between items-center">
+                <div>
+                  <div className="text-xs font-bold text-gray-500 mb-1 flex items-center gap-2">
+                    5. Identité Certifiée (KYC)
+                    {isIdentityVerified ? <Check size={14} className="text-green-500" /> : <ShieldCheck size={14} className="text-red-400" />}
+                  </div>
+                  <div className="text-sm font-medium text-gray-800">Votre profil doit être validé par un vote communautaire massif.</div>
+                </div>
+                <button className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm border-none cursor-pointer ${isIdentityVerified ? 'bg-green-500/10 text-green-600 cursor-default' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                  }`}>
+                  {isIdentityVerified ? 'Profil Vérifié' : 'Démarrer la vérification'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Onglets de la Grille */}
         <div className="flex items-center gap-6 mb-6 px-4 border-b border-gray-100 pb-2">
-          <button 
-             onClick={() => setActiveTab('recent')}
-             className={`text-xl font-black transition-colors bg-transparent border-none cursor-pointer pb-2 ${activeTab === 'recent' ? 'text-gray-800 border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
+          <button
+            onClick={() => setActiveTab('recent')}
+            className={`text-xl font-black transition-colors bg-transparent border-none cursor-pointer pb-2 ${activeTab === 'recent' ? 'text-gray-800 border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
           >
-             Styles Récents ({userPosts.length})
+            Styles Récents ({userPosts.length})
           </button>
           {isMyProfile && (
-            <button 
-               onClick={() => setActiveTab('saved')}
-               className={`text-xl font-black transition-colors bg-transparent border-none cursor-pointer pb-2 flex items-center gap-2 ${activeTab === 'saved' ? 'text-gray-800 border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`text-xl font-black transition-colors bg-transparent border-none cursor-pointer pb-2 flex items-center gap-2 ${activeTab === 'saved' ? 'text-gray-800 border-b-2 border-primary' : 'text-gray-400 hover:text-gray-600'}`}
             >
-               <Bookmark size={20} className={activeTab === 'saved' ? 'fill-primary' : ''} /> Garde-Robe ({savedPostsData.length})
+              <Bookmark size={20} className={activeTab === 'saved' ? 'fill-primary' : ''} /> Garde-Robe ({savedPostsData.length})
             </button>
           )}
         </div>
-        
-        <div 
+
+        <div
           ref={scrollContainerRef}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
@@ -347,14 +345,14 @@ export default function Profile() {
           )}
         </div>
       </div>
-      
+
       {/* Modale de Réservation Sécurisée */}
       {isBookingOpen && (
-        <BookingModal 
-           onClose={() => setIsBookingOpen(false)} 
-           mentorId={userId}
-           mentorName={profileInfo.tag}
-           rate={profileInfo.coachingRate}
+        <BookingModal
+          onClose={() => setIsBookingOpen(false)}
+          mentorId={userId}
+          mentorName={profileInfo.tag}
+          rate={profileInfo.coachingRate}
         />
       )}
     </div>
