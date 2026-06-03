@@ -7,6 +7,11 @@ const initialToken = localStorage.getItem('style_token') || null;
 export const useAuthStore = create((set) => ({
   user: null, // Plus d'utilisateur mocké au départ
   isAuthenticated: !!initialToken,
+  isAuthModalOpen: false,
+  authModalAction: "",
+
+  openAuthModal: (actionName = "effectuer cette action") => set({ isAuthModalOpen: true, authModalAction: actionName }),
+  closeAuthModal: () => set({ isAuthModalOpen: false }),
   
   // Fonction locale pour réinitialiser le state
   login: (userData) => set({ user: userData, isAuthenticated: true }),
