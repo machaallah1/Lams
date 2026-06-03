@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useSocialStore } from './socialStore';
+import { API_URL } from '../config';
 
 // Vérifier si on a un token en mémoire
 const initialToken = localStorage.getItem('style_token') || null;
@@ -30,7 +31,7 @@ export const useAuthStore = create((set) => ({
     const token = localStorage.getItem('style_token');
     if(!token) return null;
     try {
-      const res = await fetch('http://localhost:5000/api/me', {
+      const res = await fetch(`${API_URL}/api/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if(res.ok) {
@@ -64,7 +65,7 @@ export const useAuthStore = create((set) => ({
 
   // Connexion API Réelle
   loginAPI: async (email, password) => {
-    const res = await fetch('http://localhost:5000/api/auth/login', {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -81,7 +82,7 @@ export const useAuthStore = create((set) => ({
 
   // Inscription API Réelle
   registerAPI: async (pseudo, email, password) => {
-    const res = await fetch('http://localhost:5000/api/auth/register', {
+    const res = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag: pseudo, email, password })
