@@ -1,22 +1,43 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Phone, Video, Info, CheckCheck, MessageSquare, X, ChevronLeft } from 'lucide-react';
 import { useSocialStore } from '../store/socialStore';
+import { useAuthStore } from '../store/authStore';
 import PostCard from '../components/Social/PostCard';
 
 export default function Messages() {
   const conversations = useSocialStore(state => state.conversations);
+  const fetchConversations = useSocialStore(state => state.fetchConversations);
+  const fetchMessages = useSocialStore(state => state.fetchMessages);
   const sendMessage = useSocialStore(state => state.sendMessage);
+  const currentUser = useAuthStore(state => state.user);
   
-  const [activeConvId, setActiveConvId] = useState(() => {
-    const isSmall = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-    return !isSmall && conversations.length > 0 ? conversations[0].id : null;
-  });
+  const [activeConvId, setActiveConvId] = useState(null);
   const [inputText, setInputText] = useState('');
   const [viewingPost, setViewingPost] = useState(null);
   
   const messagesEndRef = useRef(null);
   
   const activeConv = conversations.find(c => c.id === activeConvId);
+
+  // Charger les conversations au montage
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  // Sélectionner la première conversation par défaut sur grand écran dès le chargement
+  useEffect(() => {
+    const isSmall = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+    if (!isSmall && conversations.length > 0 && !activeConvId) {
+      setActiveConvId(conversations[0].id);
+    }
+  }, [conversations, activeConvId]);
+
+  // Charger le fil de messages persistant lors de la sélection
+  useEffect(() => {
+    if (activeConvId) {
+      fetchMessages(activeConvId);
+    }
+  }, [activeConvId, fetchMessages]);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -64,7 +85,7 @@ export default function Messages() {
                     <span className="text-[10px] text-gray-400 font-bold">{new Date(lastMsg?.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                   </div>
                   <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'font-black text-primary' : 'text-gray-500 font-medium'}`}>
-                    {lastMsg?.senderId === 'me' ? 'Vous: ' : ''}
+                    {(lastMsg?.senderId === 'me' || lastMsg?.senderId === currentUser?.id) ? 'Vous: ' : ''}
                     {lastMsg?.type === 'share' ? '🔗 A partagé un style' : lastMsg?.text}
                   </p>
                 </div>
@@ -112,7 +133,7 @@ export default function Messages() {
               </div>
               
               {activeConv.messages.map((msg) => {
-                const isMe = msg.senderId === 'me';
+                const isMe = msg.senderId === 'me' || msg.senderId === currentUser?.id;
                 return (
                   <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300 w-full`}>
                     <div className={`max-w-[65%] p-4 shadow-sm flex flex-col gap-1.5 ${

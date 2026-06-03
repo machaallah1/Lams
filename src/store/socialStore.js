@@ -1,4 +1,23 @@
 import { create } from 'zustand';
+import { io } from 'socket.io-client';
+
+const formatMessageFromDb = (msg, posts) => {
+  if (msg.text && msg.text.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(msg.text);
+      if (parsed.type === 'share') {
+        const postData = posts.find(p => p.id === parsed.postId);
+        return {
+          ...msg,
+          type: 'share',
+          post: postData,
+          text: "Regarde ce style ! 🔥"
+        };
+      }
+    } catch(e) {}
+  }
+  return msg;
+};
 
 // Plus aucun MOCK, tout provient de l'API REST.
 
@@ -10,12 +29,15 @@ export const useSocialStore = create((set, get) => ({
   postComments: {}, // { postId: [ comments ] }
   conversations: [],
   notifications: [],
+  socket: null,
 
   // INITIALISATION UTILISATEUR CONNECTÉ
   initUserData: async () => {
     const token = localStorage.getItem('style_token');
     if(!token) return;
     try {
+      get().initSocket(token);
+
       const res = await fetch('http://localhost:5000/api/me', {
          headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -26,6 +48,113 @@ export const useSocialStore = create((set, get) => ({
            savedPosts: data.saves.map(s => s.postId),
            followedUsers: data.following.map(f => f.followingId)
          });
+      }
+    } catch(e) { console.error(e); }
+  },
+
+  initSocket: (token) => {
+    const { socket } = get();
+    if (socket) return;
+
+    const newSocket = io('http://localhost:5000', {
+      auth: { token }
+    });
+
+    newSocket.on('connect', () => {
+      console.log('Connecté au serveur Socket.io pour la messagerie !');
+    });
+
+    newSocket.on('receiveMessage', (msg) => {
+      const currentConversations = get().conversations;
+      const existingConvIndex = currentConversations.findIndex(c => c.id === msg.conversationId);
+      const posts = get().posts;
+      const formattedMsg = formatMessageFromDb(msg, posts);
+
+      if (existingConvIndex !== -1) {
+        const updatedConversations = [...currentConversations];
+        const conv = updatedConversations[existingConvIndex];
+        const msgExists = conv.messages.some(m => m.id === msg.id);
+        if (!msgExists) {
+          updatedConversations[existingConvIndex] = {
+            ...conv,
+            messages: [...conv.messages, formattedMsg],
+            unreadCount: conv.unreadCount + 1
+          };
+          set({ conversations: updatedConversations });
+        }
+      } else {
+        get().fetchConversations();
+      }
+    });
+
+    newSocket.on('messageSent', (msg) => {
+      const currentConversations = get().conversations;
+      const existingConvIndex = currentConversations.findIndex(c => c.id === msg.conversationId);
+      const posts = get().posts;
+      const formattedMsg = formatMessageFromDb(msg, posts);
+
+      if (existingConvIndex !== -1) {
+        const updatedConversations = [...currentConversations];
+        const conv = updatedConversations[existingConvIndex];
+        const msgExists = conv.messages.some(m => m.id === msg.id);
+        if (!msgExists) {
+          updatedConversations[existingConvIndex] = {
+            ...conv,
+            messages: [...conv.messages, formattedMsg]
+          };
+          set({ conversations: updatedConversations });
+        }
+      }
+    });
+
+    set({ socket: newSocket });
+  },
+
+  disconnectSocket: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.disconnect();
+      set({ socket: null });
+    }
+  },
+
+  fetchConversations: async () => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/conversations', {
+         headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.ok) {
+         const convs = await res.json();
+         const posts = get().posts;
+         const formatted = convs.map(c => ({
+           ...c,
+           messages: c.messages.map(m => formatMessageFromDb(m, posts))
+         }));
+         set({ conversations: formatted });
+      }
+    } catch(e) { console.error(e); }
+  },
+
+  fetchMessages: async (conversationId) => {
+    const token = localStorage.getItem('style_token');
+    if(!token) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/conversations/${conversationId}/messages`, {
+         headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.ok) {
+         const msgs = await res.json();
+         const posts = get().posts;
+         const formattedMsgs = msgs.map(m => formatMessageFromDb(m, posts));
+         set(state => ({
+           conversations: state.conversations.map(c => c.id === conversationId ? {
+             ...c,
+             messages: formattedMsgs,
+             unreadCount: 0
+           } : c)
+         }));
       }
     } catch(e) { console.error(e); }
   },
@@ -179,40 +308,70 @@ export const useSocialStore = create((set, get) => ({
   })),
 
   // MESSAGERIE
-  sendMentorshipRequest: (mentorId, mentorName, details) => set((state) => {
+  sendMentorshipRequest: (mentorId, mentorName, details) => {
     const textMsg = `Demande de mentorat réservée pour le ${details.date} à ${details.time}.\nMessage : ${details.message || "Aucun message."}\nMontant sécurisé : ${details.total.toFixed(2)}$`;
+    get().addNotification({ type: 'booking', text: `Nouvelle réservation de mentorat envoyée à ${mentorName}.` });
     
-    state.addNotification({ type: 'booking', text: `Nouvelle réservation de mentorat envoyée à ${mentorName}.` });
-    const newMsg = { id: Date.now().toString(), senderId: "me", text: textMsg, timestamp: new Date().toISOString() };
-    const existingConv = state.conversations.find(c => c.user.id === mentorId);
+    const conversations = get().conversations;
+    let conv = conversations.find(c => c.user.id === mentorId);
+    let convId = conv ? conv.id : null;
 
-    if (existingConv) {
-      return { conversations: state.conversations.map(c => c.user.id === mentorId ? { ...c, messages: [...c.messages, newMsg] } : c) };
-    } else {
-      const newConv = {
-        id: "c_" + Date.now(),
-        user: { id: mentorId, tag: mentorName, avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" },
-        messages: [newMsg],
-        unreadCount: 0
+    const { socket } = get();
+    if (socket) {
+      socket.emit('sendMessage', {
+        conversationId: convId,
+        receiverId: mentorId,
+        text: textMsg
+      });
+      setTimeout(() => get().fetchConversations(), 300);
+    }
+  },
+
+  sendMessage: (conversationId, text) => {
+    const conv = get().conversations.find(c => c.id === conversationId);
+    if (!conv) return;
+    const receiverId = conv.user.id;
+    const { socket } = get();
+
+    if (socket) {
+      socket.emit('sendMessage', {
+        conversationId,
+        receiverId,
+        text
+      });
+      
+      const optimisticMsg = {
+        id: "temp_" + Date.now(),
+        conversationId,
+        senderId: "me",
+        receiverId,
+        text,
+        timestamp: new Date().toISOString()
       };
-      return { conversations: [newConv, ...state.conversations] };
+      
+      set(state => ({
+        conversations: state.conversations.map(c => c.id === conversationId ? {
+          ...c,
+          messages: [...c.messages, optimisticMsg]
+        } : c)
+      }));
     }
-  }),
+  },
 
-  sendMessage: (conversationId, text) => set((state) => {
-    const newMsg = { id: Date.now().toString(), senderId: "me", text, timestamp: new Date().toISOString() };
-    const newConvs = state.conversations.map(c => c.id === conversationId ? { ...c, messages: [...c.messages, newMsg] } : c);
-    return { conversations: newConvs };
-  }),
+  sendPostShare: (friendId, post, friendData) => {
+    const sharePayload = JSON.stringify({ type: 'share', postId: post.id });
+    const conversations = get().conversations;
+    let conv = conversations.find(c => c.user.id === friendId);
+    let convId = conv ? conv.id : null;
 
-  sendPostShare: (friendId, post, friendData) => set((state) => {
-    const existingConv = state.conversations.find(c => c.user.id === friendId);
-    const newMsg = { id: Date.now().toString(), senderId: "me", type: 'share', post: post, text: "Regarde ce style ! 🔥", timestamp: new Date().toISOString() };
-    if (existingConv) {
-      return { conversations: state.conversations.map(c => c.user.id === friendId ? { ...c, messages: [...c.messages, newMsg] } : c) };
-    } else {
-      const newConv = { id: "c_" + Date.now(), user: friendData, messages: [newMsg], unreadCount: 0 };
-      return { conversations: [newConv, ...state.conversations] };
+    const { socket } = get();
+    if (socket) {
+      socket.emit('sendMessage', {
+        conversationId: convId,
+        receiverId: friendId,
+        text: sharePayload
+      });
+      setTimeout(() => get().fetchConversations(), 300);
     }
-  })
+  }
 }));

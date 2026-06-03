@@ -117,6 +117,7 @@ model Message {
   id             String   @id @default(uuid())
   conversationId String
   senderId       String
+  receiverId     String   @default("")
   text           String
   timestamp      DateTime @default(now())
 }

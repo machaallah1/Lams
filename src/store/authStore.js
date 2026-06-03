@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useSocialStore } from './socialStore';
 
 // Vérifier si on a un token en mémoire
 const initialToken = localStorage.getItem('style_token') || null;
@@ -13,6 +14,9 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem('style_token');
     set({ user: null, isAuthenticated: false });
+    try {
+      useSocialStore.getState().disconnectSocket();
+    } catch(e) { console.error(e); }
   },
   
   updateUser: (newData) => set((state) => ({ user: { ...state.user, ...newData } })),

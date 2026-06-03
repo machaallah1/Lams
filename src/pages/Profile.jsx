@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 export default function Profile() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { posts, followedUsers, savedPosts, toggleFollow } = useSocialStore();
+  const { posts, followedUsers, savedPosts, toggleFollow, conversations } = useSocialStore();
   const currentUser = useAuthStore(auth => auth.user);
   
   const userId = state?.userId || currentUser?.id;
@@ -16,6 +16,32 @@ export default function Profile() {
   const isMyProfile = userId === currentUser?.id;
   const isFollowed = followedUsers.includes(userId);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+
+  const handleStartChat = () => {
+    const existing = conversations.find(c => c.user.id === userId);
+    const convId = existing ? existing.id : [currentUser?.id, userId].sort().join('_');
+    
+    if (!existing && profileInfo) {
+      useSocialStore.setState(state => ({
+        conversations: [
+          {
+            id: convId,
+            user: {
+              id: userId,
+              tag: profileInfo.tag,
+              avatar: profileInfo.avatar,
+              isMentor: profileInfo.isMentor
+            },
+            messages: [],
+            unreadCount: 0
+          },
+          ...state.conversations
+        ]
+      }));
+    }
+    
+    navigate('/messages', { state: { activeConvId: convId } });
+  };
   const [activeTab, setActiveTab] = useState('recent');
   const scrollContainerRef = useRef(null);
 
@@ -148,15 +174,24 @@ export default function Profile() {
                 Déconnexion
               </button>
             ) : (
-              <button 
-                onClick={() => toggleFollow(userId)}
-                className={`px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer text-white text-sm ${
-                  isFollowed ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-purple-700'
-                }`}
-              >
-                {isFollowed ? <Check size={18} /> : <Plus size={18} />}
-                {isFollowed ? "Suivi" : "Suivre"}
-              </button>
+              <div className="flex gap-2.5 w-full sm:w-auto">
+                <button 
+                  onClick={() => toggleFollow(userId)}
+                  className={`flex-1 sm:flex-none px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer text-white text-sm ${
+                    isFollowed ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-purple-700'
+                  }`}
+                >
+                  {isFollowed ? <Check size={18} /> : <Plus size={18} />}
+                  {isFollowed ? "Suivi" : "Suivre"}
+                </button>
+                <button 
+                  onClick={handleStartChat}
+                  className="flex-1 sm:flex-none px-6 py-2.5 sm:px-8 sm:py-3 rounded-full font-extrabold flex items-center justify-center gap-2 transition-all duration-300 shadow-md border-none cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 text-sm"
+                >
+                  <MessageCircle size={18} />
+                  Message
+                </button>
+              </div>
             )}
           </div>
         </div>

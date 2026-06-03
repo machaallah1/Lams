@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, Cpu } from 'lucide-react';
+import { User, Mail, Lock, Cpu, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
 
 export default function Register() {
-  const [formData, setFormData] = useState({ pseudo: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ pseudo: '', email: '', password: '', confirmPassword: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const registerAPI = useAuthStore(state => state.registerAPI);
@@ -14,6 +16,12 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setError("Les mots de passe ne correspondent pas.");
+      addToast("Les mots de passe ne correspondent pas.", "error");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -135,13 +143,39 @@ export default function Register() {
             <div className="relative">
               <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="Mot de passe" 
-                className="w-full bg-[#f3f4f6]/60 border border-transparent rounded-full py-4 pl-14 pr-6 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-700 placeholder-gray-400 text-sm"
+                className="w-full bg-[#f3f4f6]/60 border border-transparent rounded-full py-4 pl-14 pr-14 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-700 placeholder-gray-400 text-sm"
                 value={formData.password}
                 onChange={e => setFormData({...formData, password: e.target.value})}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center p-0"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type={showConfirmPassword ? "text" : "password"} 
+                placeholder="Confirmer le mot de passe" 
+                className="w-full bg-[#f3f4f6]/60 border border-transparent rounded-full py-4 pl-14 pr-14 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-700 placeholder-gray-400 text-sm"
+                value={formData.confirmPassword}
+                onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center p-0"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
             <button 

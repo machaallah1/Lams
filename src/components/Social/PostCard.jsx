@@ -10,6 +10,7 @@ export default function PostCard({ post }) {
   const { followedUsers, likedPosts, savedPosts, toggleFollow, toggleLike, toggleSave, postComments, submitComment, fetchComments } = useSocialStore();
   const addToast = useToastStore(state => state.addToast);
   const currentUser = useAuthStore(state => state.user);
+  const isOwnPost = currentUser?.id === post.userId;
   const navigate = useNavigate();
   
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -73,17 +74,19 @@ export default function PostCard({ post }) {
           </div>
         </button>
 
-        <button 
-          onClick={() => toggleFollow(post.userId)}
-          className={`px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-extrabold flex items-center gap-1.5 transition-all duration-300 text-xs sm:text-sm border-none cursor-pointer ${
-            isFollowed 
-              ? 'bg-primary/15 text-primary hover:bg-primary/25' 
-              : 'bg-primary text-white hover:bg-purple-700 shadow-md hover:scale-[1.02]'
-          }`}
-        >
-          {isFollowed ? <Check size={12} className="sm:w-3.5 sm:h-3.5" /> : <Plus size={12} className="sm:w-3.5 sm:h-3.5" />}
-          {isFollowed ? "Suivi" : "Suivre"}
-        </button>
+        {!isOwnPost && (
+          <button 
+            onClick={() => toggleFollow(post.userId)}
+            className={`px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-extrabold flex items-center gap-1.5 transition-all duration-300 text-xs sm:text-sm border-none cursor-pointer ${
+              isFollowed 
+                ? 'bg-primary/15 text-primary hover:bg-primary/25' 
+                : 'bg-primary text-white hover:bg-purple-700 shadow-md hover:scale-[1.02]'
+            }`}
+          >
+            {isFollowed ? <Check size={12} className="sm:w-3.5 sm:h-3.5" /> : <Plus size={12} className="sm:w-3.5 sm:h-3.5" />}
+            {isFollowed ? "Suivi" : "Suivre"}
+          </button>
+        )}
       </div>
 
       {/* Image */}
@@ -183,7 +186,7 @@ export default function PostCard({ post }) {
             ) : (
               comments.map(c => (
                 <div key={c.id} className="text-[11px] bg-primary/5 p-1.5 px-2.5 rounded-xl text-left border border-primary/5">
-                  <span className="font-extrabold text-primary mr-1.5">{c.user}:</span>
+                  <span className="font-extrabold text-primary mr-1.5">{c.user?.tag || c.user || "@inconnu"}:</span>
                   <span className="text-gray-700 font-medium">{c.text}</span>
                 </div>
               ))
