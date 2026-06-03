@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Upload, Sparkles, Bot, X } from 'lucide-react';
 import PremiumPaywall from '../components/AiStylist/PremiumPaywall';
 import { useToastStore } from '../store/toastStore';
+import { API_URL } from '../config';
 
 
 
@@ -65,7 +66,7 @@ export default function AiChat() {
     setIsTyping(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/chat', {
+      const response = await fetch(`${API_URL}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

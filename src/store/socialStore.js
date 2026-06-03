@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { io } from 'socket.io-client';
+import { API_URL } from '../config';
 
 const formatMessageFromDb = (msg, posts) => {
   if (msg.text && msg.text.startsWith('{')) {
@@ -38,7 +39,7 @@ export const useSocialStore = create((set, get) => ({
     try {
       get().initSocket(token);
 
-      const res = await fetch('http://localhost:5000/api/me', {
+      const res = await fetch(`${API_URL}/api/me`, {
          headers: { 'Authorization': `Bearer ${token}` }
       });
       if(res.ok) {
@@ -56,7 +57,7 @@ export const useSocialStore = create((set, get) => ({
     const { socket } = get();
     if (socket) return;
 
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(API_URL, {
       auth: { token }
     });
 
@@ -122,7 +123,7 @@ export const useSocialStore = create((set, get) => ({
     const token = localStorage.getItem('style_token');
     if(!token) return;
     try {
-      const res = await fetch('http://localhost:5000/api/conversations', {
+      const res = await fetch(`${API_URL}/api/conversations`, {
          headers: { 'Authorization': `Bearer ${token}` }
       });
       if(res.ok) {
@@ -141,7 +142,7 @@ export const useSocialStore = create((set, get) => ({
     const token = localStorage.getItem('style_token');
     if(!token) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/conversations/${conversationId}/messages`, {
+      const res = await fetch(`${API_URL}/api/conversations/${conversationId}/messages`, {
          headers: { 'Authorization': `Bearer ${token}` }
       });
       if(res.ok) {
@@ -162,7 +163,7 @@ export const useSocialStore = create((set, get) => ({
   // CHARGEMENT FEED
   fetchPosts: async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/posts');
+      const res = await fetch(`${API_URL}/api/posts`);
       if(res.ok) {
         const posts = await res.json();
         const formatted = posts.map(p => ({
@@ -170,7 +171,7 @@ export const useSocialStore = create((set, get) => ({
           tag: p.user?.tag || p.tag || "@inconnu",
           avatar: p.user?.avatar || p.avatar || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
           isMentor: p.user?.isMentor || p.isMentor || false,
-          img: p.img.startsWith('http') ? p.img : `http://localhost:5000${p.img}`,
+          img: p.img.startsWith('http') ? p.img : `${API_URL}${p.img}`,
           aiEvaluation: {
             styleScore: p.presenceScore || 0,
             harmonyScore: p.harmonyScore || 0,
@@ -186,7 +187,7 @@ export const useSocialStore = create((set, get) => ({
 
   publishPostAPI: async (formData) => {
     const token = localStorage.getItem('style_token');
-    const res = await fetch('http://localhost:5000/api/posts', {
+    const res = await fetch(`${API_URL}/api/posts`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData 
@@ -199,7 +200,7 @@ export const useSocialStore = create((set, get) => ({
         tag: data.user?.tag || data.tag || "@inconnu",
         avatar: data.user?.avatar || data.avatar || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
         isMentor: data.user?.isMentor || data.isMentor || false,
-        img: data.img.startsWith('http') ? data.img : `http://localhost:5000${data.img}`,
+        img: data.img.startsWith('http') ? data.img : `${API_URL}${data.img}`,
         aiEvaluation: {
           styleScore: data.presenceScore || 0,
           harmonyScore: data.harmonyScore || 0,
@@ -229,7 +230,7 @@ export const useSocialStore = create((set, get) => ({
     });
 
     try {
-      await fetch(`http://localhost:5000/api/posts/${postId}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+      await fetch(`${API_URL}/api/posts/${postId}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
     } catch(e) { console.error(e); }
   },
 
@@ -244,7 +245,7 @@ export const useSocialStore = create((set, get) => ({
     });
 
     try {
-      await fetch(`http://localhost:5000/api/posts/${postId}/save`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+      await fetch(`${API_URL}/api/posts/${postId}/save`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
     } catch(e) { console.error(e); }
   },
 
@@ -259,14 +260,14 @@ export const useSocialStore = create((set, get) => ({
     });
 
     try {
-      await fetch(`http://localhost:5000/api/users/${userId}/follow`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+      await fetch(`${API_URL}/api/users/${userId}/follow`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
     } catch(e) { console.error(e); }
   },
 
   // COMMENTAIRES
   fetchComments: async (postId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${postId}/comments`);
+      const res = await fetch(`${API_URL}/api/posts/${postId}/comments`);
       if(res.ok) {
         const comments = await res.json();
         set(state => ({ postComments: { ...state.postComments, [postId]: comments } }));
@@ -279,7 +280,7 @@ export const useSocialStore = create((set, get) => ({
     if(!token) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${postId}/comments`, {
+      const res = await fetch(`${API_URL}/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
