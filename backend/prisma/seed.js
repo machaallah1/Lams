@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("Nettoyage de la base de données...");
-  // Supprimer les données dans l'ordre inverse des relations
   await prisma.kycVote.deleteMany();
   await prisma.follow.deleteMany();
   await prisma.save.deleteMany();
@@ -68,6 +67,20 @@ async function main() {
     }
   });
 
+  const u5 = await prisma.user.create({
+    data: {
+      tag: "@mentor_lams",
+      email: "mentor@lams.com",
+      password: hashedPassword,
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop",
+      bio: "Mentor officiel de style Lams. Conseils personnalisés et audits de look au quotidien.",
+      isMentor: true,
+      coachingRate: 40.0,
+      kycStatus: "approved"
+    }
+  });
+  // password123
+
   console.log("Création des posts...");
   // Post 1 (Sophie)
   const p1 = await prisma.post.create({
@@ -126,6 +139,21 @@ async function main() {
       coherenceScore: 15,
       fitScore: 16,
       accessoriesScore: 14
+    }
+  });
+
+  // Post 5 (Mentor Lams)
+  const p5 = await prisma.post.create({
+    data: {
+      userId: u5.id,
+      img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=600&auto=format&fit=crop",
+      detectedStyle: "Casual Chic",
+      score: 90,
+      presenceScore: 19,
+      harmonyScore: 18,
+      coherenceScore: 18,
+      fitScore: 19,
+      accessoriesScore: 16
     }
   });
 

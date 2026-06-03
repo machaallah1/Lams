@@ -9,6 +9,7 @@ import ShareModal from './ShareModal';
 export default function PostCard({ post }) {
   const { followedUsers, likedPosts, savedPosts, toggleFollow, toggleLike, toggleSave, postComments, submitComment, fetchComments } = useSocialStore();
   const addToast = useToastStore(state => state.addToast);
+  const openAuthModal = useAuthStore(state => state.openAuthModal);
   const currentUser = useAuthStore(state => state.user);
   const isOwnPost = currentUser?.id === post.userId;
   const navigate = useNavigate();
@@ -29,20 +30,32 @@ export default function PostCard({ post }) {
   const isSaved = savedPosts?.includes(post.id) || false;
   const comments = postComments[post.id] || [];
 
+  const handleAuthRequiredAction = (actionName, actionFn) => {
+    if (!currentUser) {
+      openAuthModal(actionName);
+      return;
+    }
+    actionFn();
+  };
+
   const handleShare = () => {
     setIsShareOpen(true);
   };
 
   const handleSave = () => {
-    toggleSave(post.id);
-    addToast(isSaved ? "Style retiré des favoris" : "Style sauvegardé dans vos collections !", "success");
+    handleAuthRequiredAction("sauvegarder ce style", () => {
+      toggleSave(post.id);
+      addToast(isSaved ? "Style retiré des favoris" : "Style sauvegardé dans vos collections !", "success");
+    });
   };
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      submitComment(post.id, newComment, currentUser, null);
-      setNewComment('');
-      addToast("Commentaire ajouté !", "success");
+      handleAuthRequiredAction("ajouter un commentaire", () => {
+        submitComment(post.id, newComment, currentUser, null);
+        setNewComment('');
+        addToast("Commentaire ajouté !", "success");
+      });
     }
   };
 
@@ -76,7 +89,7 @@ export default function PostCard({ post }) {
 
         {!isOwnPost && (
           <button 
-            onClick={() => toggleFollow(post.userId)}
+            onClick={() => handleAuthRequiredAction("s'abonner à ce créateur", () => toggleFollow(post.userId))}
             className={`px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full font-extrabold flex items-center gap-1.5 transition-all duration-300 text-xs sm:text-sm border-none cursor-pointer ${
               isFollowed 
                 ? 'bg-primary/15 text-primary hover:bg-primary/25' 
@@ -139,7 +152,7 @@ export default function PostCard({ post }) {
           </div>
           
           <button 
-            onClick={() => toggleLike(post.id)}
+            onClick={() => handleAuthRequiredAction("liker ce style", () => toggleLike(post.id))}
             className={`w-[45px] h-[45px] sm:w-[58px] sm:h-[58px] rounded-[50%] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer border-none shadow-sm ${
               isLiked ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary hover:bg-primary/20'
             }`}

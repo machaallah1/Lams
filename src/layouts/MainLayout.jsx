@@ -4,9 +4,10 @@ import { Home, Search, PlusCircle, User, BarChart2, Settings, Bell, MessageSquar
 import { useSocialStore } from '../store/socialStore';
 import { useAuthStore } from '../store/authStore';
 
-const SidebarLink = ({ to, icon: Icon, label, isCollapsed }) => (
+const SidebarLink = ({ to, icon: Icon, label, isCollapsed, onClick }) => (
   <NavLink 
     to={to}
+    onClick={onClick}
     end={to === "/"}
     className={({ isActive }) => 
       `flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-2xl font-extrabold text-sm transition-all duration-300 border border-transparent cursor-pointer ${
@@ -26,9 +27,10 @@ const SidebarLink = ({ to, icon: Icon, label, isCollapsed }) => (
   </NavLink>
 );
 
-const MobileNavLink = ({ to, icon: Icon, label }) => (
+const MobileNavLink = ({ to, icon: Icon, label, onClick }) => (
   <NavLink
     to={to}
+    onClick={onClick}
     end={to === "/"}
     className={({ isActive }) => 
       `flex flex-col items-center justify-center w-12 sm:w-14 h-12 rounded-xl transition-all duration-300 ${
@@ -60,13 +62,38 @@ export default function MainLayout() {
 
   const currentUser = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
+  const isAuthModalOpen = useAuthStore(state => state.isAuthModalOpen);
+  const authModalAction = useAuthStore(state => state.authModalAction);
+  const openAuthModal = useAuthStore(state => state.openAuthModal);
+  const closeAuthModal = useAuthStore(state => state.closeAuthModal);
 
   const handleToggleNotifs = () => {
+    if (!currentUser) {
+      openAuthModal("voir vos notifications");
+      return;
+    }
     if (!showNotifs) {
       markNotificationsAsRead();
     }
     setShowNotifs(!showNotifs);
     setShowProfileMenu(false);
+  };
+
+  const handleLinkClick = (e, to) => {
+    const protectedPaths = ['/create', '/messages', '/aichat', '/analytics', '/settings', '/profile'];
+    if (!currentUser && protectedPaths.includes(to)) {
+      e.preventDefault();
+      
+      let actionName = "accéder à cette page";
+      if (to === '/create') actionName = "publier un nouveau style";
+      if (to === '/messages') actionName = "accéder à vos messages";
+      if (to === '/aichat') actionName = "discuter avec le styliste IA";
+      if (to === '/profile') actionName = "accéder à votre profil";
+      if (to === '/analytics') actionName = "voir vos statistiques";
+      if (to === '/settings') actionName = "accéder aux paramètres";
+      
+      openAuthModal(actionName);
+    }
   };
 
   const handleToggleProfile = () => {
@@ -120,14 +147,14 @@ export default function MainLayout() {
 
           {/* Liens de navigation */}
           <nav className="flex flex-col gap-2">
-            <SidebarLink to="/" icon={Home} label="Style Feed" isCollapsed={isCollapsed} />
-            <SidebarLink to="/explore" icon={Search} label="Explorer" isCollapsed={isCollapsed} />
-            <SidebarLink to="/create" icon={PlusCircle} label="Publier" isCollapsed={isCollapsed} />
-            <SidebarLink to="/messages" icon={MessageSquare} label="Messages" isCollapsed={isCollapsed} />
-            <SidebarLink to="/aichat" icon={Bot} label="Styliste IA" isCollapsed={isCollapsed} />
-            <SidebarLink to="/profile" icon={User} label="Mon Profil" isCollapsed={isCollapsed} />
-            <SidebarLink to="/analytics" icon={BarChart2} label="Statistiques" isCollapsed={isCollapsed} />
-            <SidebarLink to="/settings" icon={Settings} label="Paramètres" isCollapsed={isCollapsed} />
+            <SidebarLink to="/" icon={Home} label="Style Feed" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/")} />
+            <SidebarLink to="/explore" icon={Search} label="Explorer" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/explore")} />
+            <SidebarLink to="/create" icon={PlusCircle} label="Publier" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/create")} />
+            <SidebarLink to="/messages" icon={MessageSquare} label="Messages" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/messages")} />
+            <SidebarLink to="/aichat" icon={Bot} label="Styliste IA" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/aichat")} />
+            <SidebarLink to="/profile" icon={User} label="Mon Profil" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/profile")} />
+            <SidebarLink to="/analytics" icon={BarChart2} label="Statistiques" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/analytics")} />
+            <SidebarLink to="/settings" icon={Settings} label="Paramètres" isCollapsed={isCollapsed} onClick={(e) => handleLinkClick(e, "/settings")} />
           </nav>
         </div>
         
@@ -139,11 +166,11 @@ export default function MainLayout() {
 
       {/* Bottom Navigation Mobile/Tablet */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[64px] bg-white/90 backdrop-blur-md border-t border-primary/5 flex items-center justify-around px-2 pb-1 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
-        <MobileNavLink to="/" icon={Home} label="Feed" />
-        <MobileNavLink to="/explore" icon={Search} label="Explore" />
-        <MobileNavLink to="/create" icon={PlusCircle} label="Publier" />
-        <MobileNavLink to="/aichat" icon={Bot} label="Styliste IA" />
-        <MobileNavLink to="/profile" icon={User} label="Profil" />
+        <MobileNavLink to="/" icon={Home} label="Feed" onClick={(e) => handleLinkClick(e, "/")} />
+        <MobileNavLink to="/explore" icon={Search} label="Explore" onClick={(e) => handleLinkClick(e, "/explore")} />
+        <MobileNavLink to="/create" icon={PlusCircle} label="Publier" onClick={(e) => handleLinkClick(e, "/create")} />
+        <MobileNavLink to="/aichat" icon={Bot} label="Styliste IA" onClick={(e) => handleLinkClick(e, "/aichat")} />
+        <MobileNavLink to="/profile" icon={User} label="Profil" onClick={(e) => handleLinkClick(e, "/profile")} />
       </nav>
 
       {/* Reste de la page */}
@@ -213,7 +240,7 @@ export default function MainLayout() {
                   className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-white object-cover"
                 />
                 <span className="font-extrabold text-sm text-primary max-w-[100px] truncate hidden md:inline">
-                  {currentUser?.tag ? currentUser.tag.replace('@', '') : 'Profil'}
+                  {currentUser?.tag ? currentUser.tag.replace('@', '') : 'Invité'}
                 </span>
                 <ChevronDown size={14} className={`text-primary transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
               </button>
@@ -227,32 +254,46 @@ export default function MainLayout() {
                       className="w-16 h-16 rounded-full border-2 border-primary object-cover mb-2"
                     />
                     <span className="font-black text-gray-800 text-base flex items-center gap-1.5 justify-center">
-                      {currentUser?.tag || "@inconnu"}
+                      {currentUser?.tag || "Invité"}
                       {currentUser?.isMentor && (
                         <span className="text-[9px] bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Shirt size={9} /> Mentor
                         </span>
                       )}
                     </span>
-                    <span className="text-xs text-gray-400 truncate max-w-full">{currentUser?.email}</span>
+                    <span className="text-xs text-gray-400 truncate max-w-full">{currentUser?.email || "Non connecté"}</span>
                   </div>
                   
                   <div className="flex flex-col gap-2 mt-4">
-                    <button 
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        navigate('/profile');
-                      }}
-                      className="w-full py-3 px-4 rounded-xl text-left font-bold text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-2 border-none bg-transparent cursor-pointer"
-                    >
-                      <User size={16} /> Voir mon Profil
-                    </button>
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full py-3 px-4 rounded-xl text-left font-bold text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-2 border-none bg-transparent cursor-pointer"
-                    >
-                      <LogOut size={16} /> Se déconnecter
-                    </button>
+                    {currentUser ? (
+                      <>
+                        <button 
+                          onClick={() => {
+                            setShowProfileMenu(false);
+                            navigate('/profile');
+                          }}
+                          className="w-full py-3 px-4 rounded-xl text-left font-bold text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-all flex items-center gap-2 border-none bg-transparent cursor-pointer"
+                        >
+                          <User size={16} /> Voir mon Profil
+                        </button>
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full py-3 px-4 rounded-xl text-left font-bold text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-2 border-none bg-transparent cursor-pointer"
+                        >
+                          <LogOut size={16} /> Se déconnecter
+                        </button>
+                      </>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          navigate('/login');
+                        }}
+                        className="w-full py-3 px-4 rounded-xl text-left font-bold text-sm text-primary hover:bg-primary/10 transition-all flex items-center gap-2 border-none bg-transparent cursor-pointer"
+                      >
+                        <LogOut size={16} className="rotate-180" /> Se connecter
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -266,6 +307,44 @@ export default function MainLayout() {
         </main>
 
       </div>
+
+      {/* Modale d'Authentification Visiteur */}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[999] animate-in fade-in duration-300">
+          <div className="glass max-w-sm w-full mx-4 rounded-[35px] p-8 border border-white/20 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white mb-5 shadow-lg shadow-primary/20">
+              <Shirt size={28} className="animate-pulse" />
+            </div>
+            
+            <h3 className="font-black text-xl text-primary mb-2.5">
+              Connexion requise
+            </h3>
+            
+            <p className="text-sm text-gray-500 font-medium mb-6 px-1.5 leading-relaxed">
+              Pour pouvoir {authModalAction || "effectuer cette action"}, vous devez d'abord vous connecter ou créer un compte.
+            </p>
+            
+            <div className="flex flex-col gap-2.5 w-full">
+              <button 
+                onClick={() => {
+                  closeAuthModal();
+                  navigate('/login');
+                }}
+                className="w-full py-3.5 rounded-2xl bg-primary hover:bg-purple-700 text-white font-extrabold text-sm shadow-[0_10px_20px_rgba(168,85,247,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer"
+              >
+                Se connecter
+              </button>
+              
+              <button 
+                onClick={closeAuthModal}
+                className="w-full py-3.5 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary font-extrabold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer"
+              >
+                Continuer comme invité
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

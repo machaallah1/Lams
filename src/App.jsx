@@ -45,19 +45,15 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        <Route path="/" element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }>
+        <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
-          <Route path="profile" element={<Profile />} />
           <Route path="explore" element={<Explore />} />
-          <Route path="create" element={<CreatePost />} />
-          <Route path="messages" element={<Messages />} />
-          <Route path="aichat" element={<AiChat />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+          <Route path="messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+          <Route path="aichat" element={<ProtectedRoute><AiChat /></ProtectedRoute>} />
+          <Route path="analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="*" element={<div className="flex w-full h-full justify-center items-center text-xl text-primary/50 font-bold glass rounded-3xl m-10">Interface en construction</div>} />
         </Route>
       </Routes>
